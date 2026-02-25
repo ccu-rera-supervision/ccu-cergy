@@ -2,33 +2,36 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Supervision Gare</title>
+    <title>Supervision Cergy-le-Haut</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .header { background: #003366; color: #ffcc00; padding: 20px; text-align: center; font-size: 2.2em; border-bottom: 5px solid #ffcc00; font-weight: bold; }
-        .train-list { flex: 1; padding: 10px; overflow-y: auto; }
-        .train-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; font-size: 2em; }
-        .heure { color: #00ff00; font-weight: bold; width: 25%; }
-        .dest { width: 55%; font-weight: bold; }
-        .miss { color: #00bfff; width: 20%; text-align: right; border: 2px solid #00bfff; border-radius: 8px; padding: 3px; font-size: 0.6em; }
-        .status { text-align: center; padding: 50px; font-size: 1.5em; color: #ffcc00; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { background: #003366; color: #ffcc00; padding: 25px; text-align: center; font-size: 2.8em; border-bottom: 6px solid #ffcc00; font-weight: bold; }
+        .train-list { flex: 1; padding: 15px; }
+        .train-row { display: flex; justify-content: space-between; align-items: center; padding: 25px; border-bottom: 2px solid #222; font-size: 2.5em; }
+        .heure { color: #00ff00; font-weight: bold; width: 20%; }
+        .dest { width: 55%; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .miss { color: #00bfff; width: 25%; text-align: right; border: 3px solid #00bfff; border-radius: 12px; padding: 5px 15px; font-size: 0.7em; font-weight: bold; }
+        .footer { background: #28a745; padding: 20px; text-align: center; font-size: 2.2em; font-weight: bold; }
+        .status { text-align: center; padding: 100px; font-size: 1.8em; color: #ffcc00; }
     </style>
 </head>
 <body>
-    <div class="header" id="gare-nom">LA PLAINE STADE DE FRANCE</div>
+    <div class="header">CERGY LE HAUT - PROCHAINS DÉPARTS</div>
     <div class="train-list" id="trains">
-        <div class="status">Scan du réseau en cours...</div>
+        <div class="status">Flux en attente (Reprise demain matin)...</div>
     </div>
+    <div class="footer">RER A / LIGNE L : TRAFIC NORMAL</div>
 
     <script>
+        // TON TOKEN SNCF
         const TOKEN = "5fb29124-7667-4f65-9f5b-59d084328f41";
-        // On essaie avec le code de la zone d'arrêt (plus large)
-        const GARE_ID = "stop_area:SNCF:87164798"; 
+        // CODE GARE CERGY-LE-HAUT
+        const GARE = "stop_area:SNCF:87382655";
 
         async function update() {
             try {
-                // On demande les trains sur les 180 prochaines minutes (3h)
-                const api = `https://api.navitia.io/v1/coverage/fr-idf/stop_areas/${GARE_ID}/departures?duration=10800&depth=2`;
+                // Utilisation du proxy AllOrigins pour garantir l'accès via GitHub
+                const api = `https://api.navitia.io/v1/coverage/fr-idf/stop_areas/${GARE}/departures?duration=7200`;
                 const url = `https://api.allorigins.win/get?url=${encodeURIComponent(api)}`;
                 
                 const response = await fetch(url, { headers: { 'Authorization': TOKEN } });
@@ -37,13 +40,14 @@
                 
                 let html = "";
                 if(data.departures && data.departures.length > 0) {
-                    data.departures.forEach(d => {
-                        const date = d.stop_date_time.departure_date_time;
-                        const h = date.substring(9, 11) + ":" + date.substring(11, 13);
+                    data.departures.slice(0, 8).forEach(d => {
+                        const raw = d.stop_date_time.departure_date_time;
+                        const h = raw.substring(9, 11) + ":" + raw.substring(11, 13);
                         const dest = d.display_informations.direction.split('(')[0].trim();
                         const miss = d.display_informations.headsign || "---";
 
-                        html += `<div class="train-row">
+                        html += `
+                        <div class="train-row">
                             <div class="heure">${h}</div>
                             <div class="dest">${dest}</div>
                             <div class="miss">${miss}</div>
@@ -51,15 +55,15 @@
                     });
                     document.getElementById('trains').innerHTML = html;
                 } else {
-                    document.getElementById('trains').innerHTML = "<div class='status'>Aucun train trouvé sur les 3 prochaines heures.</div>";
+                    document.getElementById('trains').innerHTML = "<div class='status'>Fin de service - Reprise demain matin</div>";
                 }
             } catch (e) {
-                document.getElementById('trains').innerHTML = "<div class='status' style='color:red'>Erreur de liaison.</div>";
+                document.getElementById('trains').innerHTML = "<div class='status'>Recherche de signal...</div>";
             }
         }
 
         update();
-        setInterval(update, 30000);
+        setInterval(update, 60000); // Mise à jour toutes les minutes
     </script>
 </body>
 </html>
