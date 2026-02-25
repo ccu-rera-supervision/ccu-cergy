@@ -2,65 +2,72 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Supervision Live</title>
+    <title>Supervision Trafic IDFM</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { background: #003366; color: #ffcc00; padding: 25px; text-align: center; font-size: 2.8em; border-bottom: 6px solid #ffcc00; font-weight: bold; text-transform: uppercase; }
-        .train-list { flex: 1; padding: 15px; display: flex; flex-direction: column; overflow-y: auto; }
-        .train-row { display: flex; justify-content: space-between; align-items: center; padding: 25px; border-bottom: 2px solid #222; font-size: 2.5em; }
-        .heure { color: #00ff00; font-weight: bold; width: 20%; }
-        .dest { width: 55%; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .miss { color: #00bfff; width: 25%; text-align: right; border: 3px solid #00bfff; border-radius: 12px; padding: 5px 15px; font-size: 0.7em; font-weight: bold; }
-        .status { text-align: center; padding: 100px; font-size: 1.8em; color: #ffcc00; }
+        .header { background: #002244; color: #00bfff; padding: 25px; text-align: center; font-size: 2.5em; border-bottom: 5px solid #00bfff; font-weight: bold; }
+        .alert-list { flex: 1; padding: 20px; overflow-y: auto; }
+        .alert-card { background: #111; border-left: 12px solid #ffcc00; margin-bottom: 25px; padding: 25px; border-radius: 8px; }
+        .line-badge { background: #ffcc00; color: #000; padding: 8px 18px; font-weight: bold; border-radius: 6px; font-size: 1.4em; margin-right: 20px; }
+        .alert-title { font-size: 1.9em; font-weight: bold; color: #ffcc00; }
+        .alert-text { font-size: 1.5em; line-height: 1.5; color: #ececec; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; }
+        .status { text-align: center; padding: 100px; font-size: 2em; color: #00ff00; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">LA PLAINE STADE DE FRANCE - DÉPARTS</div>
-    <div class="train-list" id="trains">
-        <div class="status">Chargement du flux...</div>
+    <div class="header">IDFM - ÉTAT DU RÉSEAU (REQUÊTE GLOBALE)</div>
+    <div class="alert-list" id="alerts">
+        <div class="status">Initialisation du contrat d'interface...</div>
     </div>
 
     <script>
-        const TOKEN = "7ea58a7fcd5301b0425dd47ea3212ab8640bc0b09c90031a6474e8c6";
-        const GARE = "stop_area:SNCF:87164798"; 
+        // TA CLÉ IDFM (PRIM)
+        const API_KEY_IDFM = "7ea58a7fcd5301b0425dd47ea3212ab8640bc0b09c90031a6474e8c6";
 
-        async function update() {
+        async function updateTrafic() {
             try {
-                const api = `https://api.navitia.io/v1/coverage/fr-idf/stop_areas/${GARE}/departures?duration=7200`;
+                // Utilisation de l'URL exacte du contrat d'interface
+                const api = `https://prim.iledefrance-mobilites.fr/marketplace/disruptions_bulk/disruptions/v2`;
                 const url = `https://api.allorigins.win/get?url=${encodeURIComponent(api)}`;
                 
                 const response = await fetch(url, { 
-                    headers: { 'Authorization': TOKEN } 
+                    headers: { 'apikey': API_KEY_IDFM } 
                 });
+                
                 const json = await response.json();
                 const data = JSON.parse(json.contents);
                 
                 let html = "";
-                if(data.departures && data.departures.length > 0) {
-                    data.departures.slice(0, 10).forEach(d => {
-                        const raw = d.stop_date_time.departure_date_time;
-                        const h = raw.substring(9, 11) + ":" + raw.substring(11, 13);
-                        const dest = d.display_informations.direction.split('(')[0].trim();
-                        const miss = d.display_informations.headsign || "---";
+                // Structure basée sur l'API globale v2
+                if(data.Siri && data.Siri.ServiceDelivery && data.Siri.ServiceDelivery.GeneralMessageDelivery) {
+                    const messages = data.Siri.ServiceDelivery.GeneralMessageDelivery[0].InfoMessage;
+                    
+                    messages.forEach(msg => {
+                        const content = msg.Content;
+                        const messageText = content.MessageText[0].Value;
+                        const line = content.LineRef?.[0]?.Value || "Réseau";
 
                         html += `
-                        <div class="train-row">
-                            <div class="heure">${h}</div>
-                            <div class="dest">${dest}</div>
-                            <div class="miss">${miss}</div>
+                        <div class="alert-card">
+                            <div class="line-info">
+                                <span class="line-badge">${line}</span>
+                                <span class="alert-title">Incident ou Travaux</span>
+                            </div>
+                            <div class="alert-text">${messageText}</div>
                         </div>`;
                     });
-                    document.getElementById('trains').innerHTML = html;
+                    
+                    document.getElementById('alerts').innerHTML = html || "<div class='status'>✅ TRAFIC NORMAL SUR LE RÉSEAU</div>";
                 } else {
-                    document.getElementById('trains').innerHTML = "<div class='status'>Aucun train détecté.</div>";
+                    document.getElementById('alerts').innerHTML = "<div class='status'>✅ AUCUNE PERTURBATION MAJEURE</div>";
                 }
             } catch (e) {
-                document.getElementById('trains').innerHTML = "<div class='status' style='color:#ff4444'>Signal perdu...</div>";
+                document.getElementById('alerts').innerHTML = "<div class='status' style='color:#ff4444'>Erreur de liaison IDFM (v2)...</div>";
             }
         }
 
-        update();
-        setInterval(update, 30000); 
+        updateTrafic();
+        setInterval(updateTrafic, 120000); 
     </script>
 </body>
 </html>
