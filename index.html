@@ -2,11 +2,11 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Supervision Cergy</title>
+    <title>Supervision Cergy - SNCF</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         .header { background: #003366; color: #ffcc00; padding: 20px; text-align: center; font-size: 2.5em; border-bottom: 5px solid #ffcc00; font-weight: bold; }
-        .train-list { flex: 1; padding: 20px; }
+        .train-list { flex: 1; padding: 20px; overflow-y: auto; }
         .train-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #333; font-size: 2.2em; }
         .heure { color: #00ff00; font-weight: bold; width: 20%; }
         .dest { width: 60%; font-weight: bold; }
@@ -16,60 +16,55 @@
     </style>
 </head>
 <body>
-    <div class="header">CERGY LE HAUT - DÉPARTS</div>
-    <div id="trains">
-        <div class="status">Chargement en cours...</div>
+    <div class="header">CERGY LE HAUT - PROCHAINS DÉPARTS</div>
+    <div class="train-list" id="trains">
+        <div class="status">Connexion au serveur SNCF...</div>
     </div>
     <div class="footer">RER A : TRAFIC NORMAL</div>
 
     <script>
-        // ON MET LA CLÉ ICI
-        const MA_CLE = "3o5rx6lMbaml4H5F4JC1Diqy5x9Sa9Mq";
-        const GARE_ID = "STIF:StopArea:SP:474151:"; 
+        // ON UTILISE TA CLÉ SNCF (NAVITIA) POUR ÉVITER LE QUOTA IDFM BLOQUÉ
+        const SNCF_TOKEN = "5fb29124-7667-4f65-9f5b-59d084328f41";
+        const GARE_UIC = "stop_area:SNCF:87382655";
 
         async function load() {
-            const container = document.getElementById('trains');
             try {
-                // MÉTHODE ULTIME : On passe la clé dans l'URL avec apikey=
-                const targetUrl = `https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=${GARE_ID}&apikey=${MA_CLE}`;
+                // Utilisation d'un proxy pour forcer le passage sur GitHub
+                const target = `https://api.navitia.io/v1/coverage/fr-idf/stop_areas/${GARE_UIC}/departures?duration=3600`;
+                const url = "https://api.allorigins.win/get?url=" + encodeURIComponent(target);
                 
-                // On utilise AllOrigins pour éviter le blocage CORS
-                const finalUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
-                
-                const response = await fetch(finalUrl);
-                const result = await response.json();
-                
-                // On déballe les données
-                const data = JSON.parse(result.contents);
-                const list = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': SNCF_TOKEN }
+                });
+                const json = await response.json();
+                const data = JSON.parse(json.contents);
                 
                 let html = "";
-                list.slice(0, 8).forEach(item => {
-                    const journey = item.MonitoredVehicleJourney;
-                    const destination = journey.DestinationName[0].value;
-                    const mission = journey.VehicleJourneyName[0].value;
-                    
-                    const departureDate = new Date(journey.MonitoredCall.AimedDepartureTime);
-                    const h = departureDate.getHours().toString().padStart(2, '0');
-                    const m = departureDate.getMinutes().toString().padStart(2, '0');
+                data.departures.slice(0, 8).forEach(d => {
+                    // Extraction de l'heure HH:mm
+                    const rawTime = d.stop_date_time.departure_date_time.split('T')[1];
+                    const heure = rawTime.substring(0,2) + ":" + rawTime.substring(2,4);
+                    const destination = d.display_informations.direction.split('(')[0];
+                    const mission = d.display_informations.headsign;
 
                     html += `
                     <div class="train-row">
-                        <div class="heure">${h}:${m}</div>
+                        <div class="heure">${heure}</div>
                         <div class="dest">${destination}</div>
                         <div class="miss">${mission}</div>
                     </div>`;
                 });
 
-                container.innerHTML = html || "<div class='status'>Aucun train trouvé.</div>";
+                document.getElementById('trains').innerHTML = html || "<div class='status'>Aucun train trouvé.</div>";
 
-            } catch (error) {
-                container.innerHTML = "<div class='status' style='color:red'>Erreur : Le serveur IDFM ne reconnaît pas la clé.</div>";
+            } catch (e) {
+                document.getElementById('trains').innerHTML = "<div class='status' style='color:red'>Erreur de flux. Réessai...</div>";
             }
         }
 
         load();
-        setInterval(load, 30000);
+        // Mise à jour toutes les 60 secondes pour ne pas griller ce quota aussi !
+        setInterval(load, 60000); 
     </script>
 </body>
 </html>
