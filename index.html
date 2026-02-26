@@ -311,8 +311,8 @@
       var isTravaux    = low.indexOf('travaux') !== -1;
       // Interrompu réel = interrompu SANS travaux
       if (isInterrompu && !isTravaux) hasInterrompu = true;
-      else if (isInterrompu && isTravaux) hasPerturbe = true; // travaux planifiés = perturbé
-      else if (low.indexOf('perturbé') !== -1 || low.indexOf('perturbe') !== -1) hasPerturbe = true;
+      // interrompu + travaux → ignoré pour l'état du trafic (travaux planifiés)
+      else if (!isInterrompu && (low.indexOf('perturbé') !== -1 || low.indexOf('perturbe') !== -1)) hasPerturbe = true;
     }
 
     // Panneau état
