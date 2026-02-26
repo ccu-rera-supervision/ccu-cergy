@@ -19,12 +19,19 @@
       --red:    #e74c3c;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Barlow', sans-serif;
-      min-height: 100vh;
-      padding: 1.5rem 2rem;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.2rem 1.5rem;
+      gap: 1rem;
     }
 
     /* HEADER */
@@ -33,7 +40,7 @@
       align-items: center;
       justify-content: center;
       gap: 1.2rem;
-      margin-bottom: 1.5rem;
+      flex-shrink: 0;
       position: relative;
     }
     .logo-badges { display: flex; align-items: center; gap: 0.5rem; }
@@ -58,7 +65,7 @@
     }
     h1 {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800; font-size: 2rem;
+      font-weight: 800; font-size: 2.2vw;
       letter-spacing: 0.04em; text-transform: uppercase; color: white;
     }
     .live-dot {
@@ -73,11 +80,15 @@
     }
 
     /* GRILLE */
-    .grid {
+    .grid-top {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1.5rem;
-      align-items: start;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .grid-bottom {
+      flex-shrink: 0;
     }
 
     /* PANNEAU */
@@ -86,18 +97,21 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
-      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
     .panel-title {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 1.1rem;
+      font-weight: 700; font-size: 1.2rem;
       letter-spacing: 0.1em; text-transform: uppercase;
       color: white; text-align: center;
-      padding: 0.9rem 1rem;
+      padding: 0.75rem 1rem;
       background: var(--bg3);
       border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    .panel-body { padding: 1.2rem; }
+    .panel-body { padding: 1.2rem; flex: 1; overflow: hidden; }
 
     /* RETARDS */
     .delay-row {
@@ -108,19 +122,19 @@
     .delay-row:last-child { border-bottom: none; }
     .delay-mission {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800; font-size: 2.2rem;
-      color: white; letter-spacing: 0.03em; min-width: 160px;
+      font-weight: 800; font-size: 3.5vw;
+      color: white; letter-spacing: 0.03em; min-width: 10vw;
     }
     .delay-mins {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 2rem;
+      font-weight: 700; font-size: 3.2vw;
     }
     .delay-mins.orange { color: var(--orange); }
     .delay-mins.red    { color: var(--red); }
     .no-delay {
       display: flex; align-items: center; justify-content: center;
-      height: 300px; flex-direction: column; gap: 0.75rem;
-      color: var(--muted); font-size: 0.9rem;
+      height: 100%; flex-direction: column; gap: 0.75rem;
+      color: var(--muted); font-size: 1vw;
     }
     .no-delay-dot {
       width: 10px; height: 10px;
@@ -132,37 +146,40 @@
     .trafic-state-box {
       border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      min-height: 200px;
+      height: 100%;
     }
     .trafic-state-box.fluide    { background: var(--green); }
     .trafic-state-box.perturbe  { background: var(--orange); }
     .trafic-state-box.interrompu { background: var(--red); }
     .trafic-state-label {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 900; font-size: 3.5rem;
+      font-weight: 900; font-size: 6vw;
       color: white; letter-spacing: 0.05em; text-transform: uppercase;
     }
 
     /* COMMUNICATION */
+    .comm-inner {
+      display: flex; gap: 1rem;
+    }
     .comm-msg {
+      flex: 1;
       background: var(--bg3);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 1rem 1.2rem;
-      font-size: 0.85rem; line-height: 1.7;
-      color: var(--text); margin-bottom: 0.75rem;
+      padding: 0.9rem 1.2rem;
+      font-size: 1vw; line-height: 1.6;
+      color: var(--text);
     }
-    .comm-msg:last-child { margin-bottom: 0; }
     .comm-msg.perturbe  { border-left: 4px solid var(--orange); color: #f0a870; }
     .comm-msg.interrompu { border-left: 4px solid var(--red);    color: #f08080; }
     .no-comm {
       display: flex; align-items: center; justify-content: center;
-      height: 300px; color: var(--muted); font-size: 0.85rem;
+      padding: 1rem; color: var(--muted); font-size: 0.9rem;
     }
 
     .timestamp {
-      text-align: center; font-size: 0.72rem;
-      color: var(--muted); margin-top: 1.2rem; letter-spacing: 0.05em;
+      text-align: center; font-size: 0.7rem;
+      color: var(--muted); flex-shrink: 0; letter-spacing: 0.05em;
     }
     .error-box {
       background: rgba(231,76,60,.1); border: 1px solid rgba(231,76,60,.3);
@@ -182,7 +199,7 @@
   <div class="live-dot"></div>
 </header>
 
-<div class="grid">
+<div class="grid-top">
 
   <!-- PANNEAU 1 : RETARDS -->
   <div class="panel">
@@ -195,21 +212,23 @@
   <!-- PANNEAU 2 : ÉTAT DU TRAFIC -->
   <div class="panel">
     <div class="panel-title">État du trafic</div>
-    <div class="panel-body">
+    <div class="panel-body" style="padding:0.5rem;">
       <div class="trafic-state-box fluide" id="trafic-box">
         <div class="trafic-state-label" id="trafic-label">Fluide</div>
       </div>
     </div>
   </div>
 
-  <!-- PANNEAU 3 : COMMUNICATION -->
+</div>
+
+<!-- BARRE BAS : COMMUNICATION -->
+<div class="grid-bottom">
   <div class="panel">
     <div class="panel-title">Communication</div>
     <div class="panel-body" id="panel-comm">
       <div class="no-comm">Chargement…</div>
     </div>
   </div>
-
 </div>
 
 <div class="timestamp" id="ts">—</div>
