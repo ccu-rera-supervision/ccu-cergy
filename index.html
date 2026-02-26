@@ -1,342 +1,352 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RER A — Sartrouville</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Supervision RER A — Ouest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --red: #E30614;
-      --bg: #0a0a0a;
-      --bg2: #141414;
-      --bg3: #1e1e1e;
-      --text: #f0ece4;
-      --muted: #6b6660;
-      --border: #2a2a2a;
-      --green: #3ddc84;
-      --yellow: #f5c518;
-      --orange: #f08030;
+      --bg:     #1e2330;
+      --bg2:    #252b3b;
+      --bg3:    #2d3447;
+      --border: #353d52;
+      --text:   #e8eaf0;
+      --muted:  #6b7494;
+      --green:  #2ecc71;
+      --orange: #e67e22;
+      --red:    #e74c3c;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; min-height: 100vh; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      padding: 1.5rem 2rem;
+    }
 
+    /* HEADER */
     header {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      height: 72px;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+      position: relative;
     }
-    .logo { display: flex; align-items: center; gap: 1rem; }
-    .rer-badge {
-      width: 48px; height: 48px;
-      background: var(--red);
-      border-radius: 50%;
+    .logo-badges { display: flex; align-items: center; gap: 0.5rem; }
+    .badge-rer {
+      background: #1a3a8f; color: white;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 1rem;
+      padding: 0.2rem 0.5rem; border-radius: 4px;
+    }
+    .badge-a {
+      background: #e2001a; color: white;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 1.2rem;
+      width: 32px; height: 32px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.9rem;
-      color: white; box-shadow: 0 0 24px rgba(227,6,20,0.4);
     }
-    .logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; }
-    .logo-text span { color: var(--red); }
-    .live-indicator {
-      display: flex; align-items: center; gap: 0.6rem;
-      font-size: 0.75rem; color: var(--green); text-transform: uppercase;
-      letter-spacing: 0.1em; font-weight: 500;
-      background: rgba(61,220,132,0.1); border: 1px solid rgba(61,220,132,0.25);
-      padding: 0.4rem 0.9rem; border-radius: 20px;
+    .badge-sncf {
+      background: #c0392b; color: white;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      padding: 0.15rem 0.4rem; border-radius: 3px;
     }
-    .live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; flex-shrink: 0; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
-
-    main { max-width: 900px; margin: 0 auto; padding: 2rem; }
-
-    .station-header {
-      text-align: center;
-      margin-bottom: 2rem;
+    h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 2rem;
+      letter-spacing: 0.04em; text-transform: uppercase; color: white;
     }
-    .station-name {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+    .live-dot {
+      position: absolute; top: 4px; right: 0;
+      width: 12px; height: 12px;
+      background: var(--green); border-radius: 50%;
+      animation: livepulse 2.5s ease-in-out infinite;
     }
-    .station-sub { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
-
-    .toolbar { display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
-    .status-info { font-size: 0.78rem; color: var(--muted); text-align: center; }
-
-
-    .section-title {
-      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em;
-      color: var(--muted); margin-bottom: 1rem;
+    @keyframes livepulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.3; transform:scale(.7); }
     }
 
-    .departures { display: flex; flex-direction: column; gap: 0.5rem; }
+    /* GRILLE */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
 
-    .dep-row {
+    /* PANNEAU */
+    .panel {
       background: var(--bg2);
       border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      min-height: 420px;
+    }
+    .panel-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1.1rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: white; text-align: center;
+      padding: 0.9rem 1rem;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-body { padding: 1.2rem; }
+
+    /* RETARDS */
+    .delay-row {
+      display: flex; align-items: baseline; gap: 1rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .delay-row:last-child { border-bottom: none; }
+    .delay-mission {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 2.2rem;
+      color: white; letter-spacing: 0.03em; min-width: 160px;
+    }
+    .delay-mins {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 2rem;
+    }
+    .delay-mins.orange { color: var(--orange); }
+    .delay-mins.red    { color: var(--red); }
+    .no-delay {
+      display: flex; align-items: center; justify-content: center;
+      height: 300px; flex-direction: column; gap: 0.75rem;
+      color: var(--muted); font-size: 0.9rem;
+    }
+    .no-delay-dot {
+      width: 10px; height: 10px;
+      background: var(--green); border-radius: 50%;
+      animation: livepulse 2s infinite;
+    }
+
+    /* ÉTAT TRAFIC */
+    .trafic-state-box {
       border-radius: 8px;
-      padding: 1rem 1.5rem;
-      display: grid;
-      grid-template-columns: 90px 1fr 80px 110px;
-      align-items: center;
-      gap: 1rem;
-      animation: slideIn 0.3s ease;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 200px;
     }
-    @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .dep-row.cancelled { opacity: 0.5; border-color: var(--red); }
-
-    .dep-time { font-size: 1.5rem; font-weight: 500; }
-    .dep-time.soon { color: var(--green); }
-    .dep-time.very-soon { color: var(--yellow); animation: blink 1s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    .dep-dest { font-size: 0.95rem; font-weight: 500; }
-    .dep-mission { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
-
-    .dep-wait { text-align: right; font-size: 0.8rem; color: var(--muted); }
-    .dep-wait .mins { font-size: 1.1rem; font-weight: 500; color: var(--text); }
-
-    .dep-status { text-align: right; }
-    .mission-code { font-size: 0.72rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 3px; letter-spacing: 0.05em; }
-    .badge {
-      display: inline-block; font-size: 0.65rem; letter-spacing: 0.08em;
-      text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 4px;
+    .trafic-state-box.fluide    { background: var(--green); }
+    .trafic-state-box.perturbe  { background: var(--orange); }
+    .trafic-state-box.interrompu { background: var(--red); }
+    .trafic-state-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 3.5rem;
+      color: white; letter-spacing: 0.05em; text-transform: uppercase;
     }
-    .badge.ok { background: rgba(61,220,132,0.15); color: var(--green); border: 1px solid rgba(61,220,132,0.3); }
-    .badge.late { background: rgba(240,128,48,0.15); color: var(--orange); border: 1px solid rgba(240,128,48,0.3); }
-    .badge.cancel { background: rgba(227,6,20,0.15); color: var(--red); border: 1px solid rgba(227,6,20,0.3); }
 
-    .empty { text-align: center; padding: 3rem; color: var(--muted); }
-    .empty .icon { font-size: 3rem; display: block; margin-bottom: 1rem; }
-    .empty .title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem; }
+    /* COMMUNICATION */
+    .comm-msg {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      font-size: 0.85rem; line-height: 1.7;
+      color: var(--text); margin-bottom: 0.75rem;
+    }
+    .comm-msg:last-child { margin-bottom: 0; }
+    .comm-msg.perturbe  { border-left: 4px solid var(--orange); color: #f0a870; }
+    .comm-msg.interrompu { border-left: 4px solid var(--red);    color: #f08080; }
+    .no-comm {
+      display: flex; align-items: center; justify-content: center;
+      height: 300px; color: var(--muted); font-size: 0.85rem;
+    }
 
+    .timestamp {
+      text-align: center; font-size: 0.72rem;
+      color: var(--muted); margin-top: 1.2rem; letter-spacing: 0.05em;
+    }
     .error-box {
-      background: rgba(227,6,20,0.08); border: 1px solid rgba(227,6,20,0.3);
-      border-radius: 8px; padding: 1.5rem; color: #ff6b6b; font-size: 0.85rem; line-height: 1.6;
-    }
-
-    .messages { margin-top: 2rem; }
-    .msg-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-left: 3px solid var(--yellow); border-radius: 8px;
-      padding: 1rem 1.5rem; margin-bottom: 0.75rem;
-    }
-    .msg-body { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
-
-    @media (max-width: 600px) {
-      .dep-row { grid-template-columns: 70px 1fr 90px; }
-      .dep-wait { display: none; }
+      background: rgba(231,76,60,.1); border: 1px solid rgba(231,76,60,.3);
+      border-radius: 8px; padding: 1rem; font-size: .8rem; color: #e74c3c;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="rer-badge">RER<br>A</div>
-    <div class="logo-text">Trafic <span>Temps Réel</span></div>
+  <div class="logo-badges">
+    <div class="badge-rer">RER</div>
+    <div class="badge-a">A</div>
+    <div class="badge-sncf">SNCF</div>
   </div>
-  <div class="live-indicator">
-    <div class="live-dot"></div>
-    LIVE
-  </div>
+  <h1>Supervision des RER A Ouest</h1>
+  <div class="live-dot"></div>
 </header>
 
-<main>
-  <div class="station-header">
-    <div class="station-name">🚉 Sartrouville</div>
-    <div class="station-sub">RER A — Prochains passages</div>
-  </div>
+<div class="grid">
 
-  <div class="toolbar">
-    <div class="status-info" id="lastUpdate">En attente…</div>
-  </div>
-
-  <div class="section-title">Prochains passages</div>
-  <div class="departures" id="list">
-    <div class="empty">
-      <span class="icon">🚆</span>
-      <div class="title">Cliquez sur Actualiser</div>
-      <div>pour charger les prochains passages</div>
+  <!-- PANNEAU 1 : RETARDS -->
+  <div class="panel">
+    <div class="panel-title">Retards en cours</div>
+    <div class="panel-body" id="panel-retards">
+      <div class="no-delay"><div class="no-delay-dot"></div>Chargement…</div>
     </div>
   </div>
 
-  <div class="messages">
-    <div class="section-title">Infos trafic</div>
-    <div id="msgs"></div>
+  <!-- PANNEAU 2 : ÉTAT DU TRAFIC -->
+  <div class="panel">
+    <div class="panel-title">État du trafic</div>
+    <div class="panel-body">
+      <div class="trafic-state-box fluide" id="trafic-box">
+        <div class="trafic-state-label" id="trafic-label">Fluide</div>
+      </div>
+    </div>
   </div>
-</main>
+
+  <!-- PANNEAU 3 : COMMUNICATION -->
+  <div class="panel">
+    <div class="panel-title">Communication</div>
+    <div class="panel-body" id="panel-comm">
+      <div class="no-comm">Chargement…</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="timestamp" id="ts">—</div>
 
 <script>
   var PROXY = 'https://rera-proxy.sammy-avcuoglu.workers.dev/proxy';
   var STOP  = 'STIF:StopArea:SP:43191:';
   var LINE  = 'STIF:Line::C01742:';
-
   var timer = null;
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  function formatTime(iso) {
-    if (!iso) return '--:--';
-    var d = new Date(iso);
-    var h = String(d.getHours()).padStart(2,'0');
-    var m = String(d.getMinutes()).padStart(2,'0');
-    return h + ':' + m;
-  }
-
-  function minsUntil(iso) {
-    if (!iso) return null;
-    return Math.round((new Date(iso) - new Date()) / 60000);
-  }
-
   function fetchData() {
-    var url = PROXY + '/stop-monitoring?MonitoringRef=' + encodeURIComponent(STOP);
+    fetch(PROXY + '/stop-monitoring?MonitoringRef=' + encodeURIComponent(STOP), {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { renderRetards(d); })
+    .catch(function(e) {
+      document.getElementById('panel-retards').innerHTML =
+        '<div class="error-box">Erreur : ' + esc(e.message) + '</div>';
+    });
 
-    fetch(url, { headers: { 'Accept': 'application/json' } })
-      .then(function(resp) {
-        return resp.text().then(function(text) {
-          if (!resp.ok) throw new Error('HTTP ' + resp.status + ' — ' + text.slice(0, 300));
-          return JSON.parse(text);
-        });
-      })
-      .then(function(data) {
-        renderDepartures(data);
-        var now = new Date();
-        document.getElementById('lastUpdate').textContent =
-          'Actualisé à ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-        startCountdown();
-      })
-      .catch(function(err) {
-        document.getElementById('list').innerHTML =
-          '<div class="error-box"><strong>Erreur :</strong> ' + esc(err.message) + '</div>';
-        setLoading(false);
-      });
+    fetch(PROXY + '/general-message?LineRef=' + encodeURIComponent(LINE), {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { renderTrafic(d); })
+    .catch(function() {});
 
-    fetch(PROXY + '/general-message?LineRef=' + encodeURIComponent(LINE), { headers: { 'Accept': 'application/json' } })
-      .then(function(r) { return r.json(); })
-      .then(function(d) { renderMessages(d); })
-      .catch(function() {});
+    document.getElementById('ts').textContent =
+      'Actualisé à ' + new Date().toLocaleTimeString('fr-FR',
+        { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+    startCountdown();
   }
 
-  function renderDepartures(data) {
-    var list = document.getElementById('list');
+  function renderRetards(data) {
     var visits = [];
     try {
       visits = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || [];
     } catch(e) {}
 
-    if (!visits.length) {
-      list.innerHTML = '<div class="empty"><span class="icon">🕐</span><div class="title">Aucun passage trouvé</div></div>';
+    var retards = [];
+    for (var i = 0; i < visits.length; i++) {
+      var v     = visits[i];
+      var call  = (v.MonitoredVehicleJourney && v.MonitoredVehicleJourney.MonitoredCall) || {};
+      var j2    = v.MonitoredVehicleJourney || {};
+      var dept  = call.ExpectedDepartureTime || call.AimedDepartureTime;
+      var aimed = call.AimedDepartureTime;
+      if (!dept || !aimed) continue;
+      var delayMins = Math.round((new Date(dept) - new Date(aimed)) / 60000);
+      if (delayMins < 1) continue;
+      var mission = '';
+      try { mission = j2.VehicleJourneyName[0].value; } catch(e) {}
+      if (!mission) try { mission = j2.JourneyNote[0].value; } catch(e) {}
+      retards.push({ mission: mission, delay: delayMins });
+    }
+
+    var el = document.getElementById('panel-retards');
+    if (!retards.length) {
+      el.innerHTML = '<div class="no-delay"><div class="no-delay-dot"></div>Aucun retard détecté</div>';
       return;
     }
-
     var html = '';
-    var maxVisits = Math.min(visits.length, 5);
-    for (var i = 0; i < maxVisits; i++) {
-      var v = visits[i];
-      var call = (v.MonitoredVehicleJourney && v.MonitoredVehicleJourney.MonitoredCall) || {};
-      var journey = v.MonitoredVehicleJourney || {};
-
-      var dept = call.ExpectedDepartureTime || call.AimedDepartureTime || call.ExpectedArrivalTime || call.AimedArrivalTime;
-      var aimed = call.AimedDepartureTime || call.AimedArrivalTime;
-      var dest = '';
-      if (journey.DestinationName && journey.DestinationName[0]) dest = journey.DestinationName[0].value || '';
-      if (!dest && journey.DirectionName && journey.DirectionName[0]) dest = journey.DirectionName[0].value || '';
-      if (!dest) dest = '—';
-
-      // Code mission (ex: "NANI") et numéro complet (ex: "NANI04")
-      var missionCode = '';
-      if (journey.JourneyNote && journey.JourneyNote[0]) missionCode = journey.JourneyNote[0].value || '';
-      var trainNumber = '';
-      if (journey.VehicleJourneyName && journey.VehicleJourneyName[0]) trainNumber = journey.VehicleJourneyName[0].value || '';
-
-      var cancelled = call.DepartureStatus === 'cancelled';
-      var delayMs = dept && aimed ? (new Date(dept) - new Date(aimed)) : 0;
-      var delayed = delayMs > 60000;
-      var delayMins = Math.round(delayMs / 60000);
-      var mins = minsUntil(dept);
-
-      var timeClass = '';
-      if (mins !== null && mins <= 2) timeClass = 'very-soon';
-      else if (mins !== null && mins <= 5) timeClass = 'soon';
-
-      var waitHtml = '—';
-      if (mins !== null) {
-        waitHtml = mins <= 0 ? '<span class="mins">À quai</span>' : '<span class="mins">' + mins + '</span> min';
-      }
-
-      var badgeHtml = '';
-      if (cancelled) badgeHtml = '<span class="badge cancel">Supprimé</span>';
-      else if (delayed) badgeHtml = '<span class="badge late">+' + delayMins + ' min</span>';
-      else badgeHtml = '<span class="badge ok">À l\'heure</span>';
-
-      // Code mission affiché sous la destination, en alternance avec le badge
-      var missionHtml = trainNumber ? '<div class="mission-code" data-badge="' + badgeHtml.replace(/"/g, '&quot;') + '" data-i="' + i + '">' + esc(trainNumber) + '</div>' : '';
-
-      html += '<div class="dep-row' + (cancelled ? ' cancelled' : '') + '">';
-      html += '<div class="dep-time ' + timeClass + '">' + formatTime(dept) + '</div>';
-      html += '<div><div class="dep-dest">' + esc(dest) + '</div>' + missionHtml + '</div>';
-      html += '<div class="dep-wait">' + waitHtml + '</div>';
-      html += '<div class="dep-status" id="status-' + i + '">' + badgeHtml + '</div>';
+    for (var k = 0; k < retards.length; k++) {
+      var cls = retards[k].delay >= 10 ? 'red' : 'orange';
+      html += '<div class="delay-row">';
+      html += '<div class="delay-mission">' + esc(retards[k].mission) + '</div>';
+      html += '<div class="delay-mins ' + cls + '">+' + retards[k].delay + ' min</div>';
       html += '</div>';
     }
-    list.innerHTML = html;
-
-    // Alternance badge statut ↔ code mission toutes les 3 secondes
-    clearInterval(window.missionTimer);
-    window.missionTimer = setInterval(function() {
-      document.querySelectorAll('.mission-code').forEach(function(el) {
-        var idx = el.getAttribute('data-i');
-        var statusEl = document.getElementById('status-' + idx);
-        if (!statusEl) return;
-        var badgeHtml = el.getAttribute('data-badge').replace(/&quot;/g, '"');
-        if (statusEl.innerHTML === el.textContent || statusEl.querySelector('.badge') === null) {
-          statusEl.innerHTML = badgeHtml;
-        } else {
-          statusEl.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:0.85rem;color:var(--muted);letter-spacing:0.05em">' + el.textContent + '</span>';
-        }
-      });
-    }, 3000);
+    el.innerHTML = html;
   }
 
-  function renderMessages(data) {
-    var el = document.getElementById('msgs');
+  function renderTrafic(data) {
     var msgs = [];
     try {
       msgs = data.Siri.ServiceDelivery.GeneralMessageDelivery[0].InfoMessage || [];
     } catch(e) {}
 
-    if (!msgs.length) {
-      el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Aucun message en cours.</div>';
-      return;
-    }
-    var html = '';
+    var box   = document.getElementById('trafic-box');
+    var label = document.getElementById('trafic-label');
+    var comm  = document.getElementById('panel-comm');
+
+    var hasInterrompu = false;
+    var hasPerturbe   = false;
+    var allBodies     = [];
+
     for (var i = 0; i < msgs.length; i++) {
       var body = '';
       try { body = msgs[i].Content.Message[0].MessageText.value; } catch(e) {}
-      html += '<div class="msg-card"><div class="msg-body">' + esc(body) + '</div></div>';
+      if (!body) continue;
+      allBodies.push(body);
+      var low = body.toLowerCase();
+      if (low.indexOf('interrompu') !== -1) hasInterrompu = true;
+      else if (low.indexOf('perturbé') !== -1 || low.indexOf('perturbe') !== -1) hasPerturbe = true;
     }
-    el.innerHTML = html;
+
+    // Panneau état
+    box.className = 'trafic-state-box';
+    if (hasInterrompu) {
+      box.classList.add('interrompu');
+      label.textContent = 'Interrompu';
+    } else if (hasPerturbe) {
+      box.classList.add('perturbe');
+      label.textContent = 'Perturbé';
+    } else {
+      box.classList.add('fluide');
+      label.textContent = 'Fluide';
+    }
+
+    // Panneau communication — tous les messages
+    if (!allBodies.length) {
+      comm.innerHTML = '<div class="no-comm">Aucun message en cours.</div>';
+      return;
+    }
+    var html = '';
+    for (var j = 0; j < allBodies.length; j++) {
+      var txt  = allBodies[j];
+      var low2 = txt.toLowerCase();
+      var c    = '';
+      if (low2.indexOf('interrompu') !== -1) c = 'interrompu';
+      else if (low2.indexOf('perturbé') !== -1 || low2.indexOf('perturbe') !== -1) c = 'perturbe';
+      html += '<div class="comm-msg ' + c + '">' + esc(txt) + '</div>';
+    }
+    comm.innerHTML = html;
   }
 
   function startCountdown() {
-    clearInterval(timer);
-    timer = setTimeout(function() {
-      fetchData();
-    }, 45000);
+    clearTimeout(timer);
+    timer = setTimeout(fetchData, 45000);
   }
 
-  // Démarrage
   fetchData();
 </script>
-
 </body>
 </html>
