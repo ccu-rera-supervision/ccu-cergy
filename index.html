@@ -567,7 +567,7 @@
   ──────────────────────────────────────────── */
   async function fetchDepartures(stopId) {
     // API Stop Monitoring SIRI-Lite
-    const url = `${PROXY_BASE}/stop-monitoring?MonitoringRef=${encodeURIComponent(stopId)}&LineRef=${encodeURIComponent(RERA_LINE_ID)}&MaximumStopVisits=15`;
+    const url = `${PROXY_BASE}/stop-monitoring?MonitoringRef=${encodeURIComponent(stopId)}&MaximumStopVisits=20`;
 
     const resp = await fetch(url, {
       headers: { 'Accept': 'application/json' }
