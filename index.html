@@ -1,70 +1,799 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Supervision Trafic IDFM - V2</title>
-    <style>
-        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .header { background: #002244; color: #00bfff; padding: 25px; text-align: center; font-size: 2.5em; border-bottom: 5px solid #00bfff; font-weight: bold; text-transform: uppercase; }
-        .alert-list { flex: 1; padding: 20px; overflow-y: auto; }
-        .card { background: #111; border-left: 10px solid #28a745; margin-bottom: 20px; padding: 20px; border-radius: 5px; }
-        .card.disrupted { border-left-color: #ffcc00; }
-        .line-badge { background: #333; color: #fff; padding: 5px 15px; font-weight: bold; border-radius: 4px; margin-right: 15px; font-size: 1.2em; }
-        .alert-title { font-size: 1.8em; font-weight: bold; margin-bottom: 10px; display: inline-block; }
-        .alert-msg { font-size: 1.4em; color: #ccc; line-height: 1.4; border-top: 1px solid #222; padding-top: 10px; margin-top: 10px; }
-        .status { text-align: center; padding: 100px; font-size: 2em; color: #00ff00; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RER A — Temps Réel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --red: #E30614;
+      --red-dark: #a8040f;
+      --bg: #0a0a0a;
+      --bg2: #141414;
+      --bg3: #1e1e1e;
+      --text: #f0ece4;
+      --muted: #6b6660;
+      --border: #2a2a2a;
+      --green: #3ddc84;
+      --yellow: #f5c518;
+      --orange: #f08030;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .rer-badge {
+      width: 48px;
+      height: 48px;
+      background: var(--red);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      color: white;
+      box-shadow: 0 0 24px rgba(227,6,20,0.4);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text span {
+      color: var(--red);
+    }
+
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ── STATION PICKER ── */
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      align-items: end;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .field select, .field input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      appearance: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .field select:focus, .field input:focus {
+      outline: none;
+      border-color: var(--red);
+    }
+
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b6660' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    .btn-refresh {
+      background: var(--red);
+      color: white;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .btn-refresh:hover { background: var(--red-dark); }
+    .btn-refresh:active { transform: scale(0.97); }
+    .btn-refresh.loading { opacity: 0.6; pointer-events: none; }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .status-bar .updated {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .traffic-status {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .traffic-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .traffic-dot.warning { background: var(--yellow); }
+    .traffic-dot.disrupted { background: var(--red); }
+
+    /* ── DEPARTURES GRID ── */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .departures-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .departure-row {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      display: grid;
+      grid-template-columns: 80px 1fr 80px 100px;
+      align-items: center;
+      gap: 1rem;
+      transition: border-color 0.2s, transform 0.15s;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .departure-row:hover {
+      border-color: #3a3a3a;
+      transform: translateX(2px);
+    }
+
+    .departure-row.cancelled {
+      opacity: 0.5;
+      border-color: var(--red);
+      background: rgba(227,6,20,0.05);
+    }
+
+    .dep-time {
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .dep-time.soon {
+      color: var(--green);
+    }
+
+    .dep-time.very-soon {
+      color: var(--yellow);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .dep-destination {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .dep-mission {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-top: 0.2rem;
+    }
+
+    .dep-wait {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .dep-wait .minutes {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .dep-status {
+      text-align: right;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .badge.on-time { background: rgba(61,220,132,0.15); color: var(--green); border: 1px solid rgba(61,220,132,0.3); }
+    .badge.delayed { background: rgba(240,128,48,0.15); color: var(--orange); border: 1px solid rgba(240,128,48,0.3); }
+    .badge.cancelled { background: rgba(227,6,20,0.15); color: var(--red); border: 1px solid rgba(227,6,20,0.3); }
+
+    /* ── TRAFFIC MESSAGES ── */
+    .messages-section {
+      margin-top: 2.5rem;
+    }
+
+    .message-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--yellow);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 0.75rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    .message-card.info { border-left-color: #4a9eff; }
+    .message-card.disruption { border-left-color: var(--red); }
+
+    .message-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .message-body {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── EMPTY / ERROR ── */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+
+    .empty .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .empty .title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .error-box {
+      background: rgba(227,6,20,0.08);
+      border: 1px solid rgba(227,6,20,0.3);
+      border-radius: 8px;
+      padding: 1.5rem;
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* ── AUTO REFRESH ── */
+    .refresh-bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .refresh-progress {
+      height: 100%;
+      background: var(--red);
+      border-radius: 1px;
+      transition: width 1s linear;
+    }
+
+    /* ── API KEY WARNING ── */
+    .api-warning {
+      background: rgba(245,197,24,0.1);
+      border: 1px solid rgba(245,197,24,0.3);
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      font-size: 0.78rem;
+      color: var(--yellow);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .controls { grid-template-columns: 1fr; }
+      .departure-row { grid-template-columns: 70px 1fr 80px; }
+      .dep-wait { display: none; }
+      header { padding: 0 1rem; }
+      main { padding: 1rem; }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-    <div class="header">IDFM - ÉTAT DU RÉSEAU (LINE REPORTS)</div>
-    <div class="alert-list" id="display">
-        <div class="status">Initialisation du contrat d'interface V2...</div>
+
+<header>
+  <div class="logo">
+    <div class="rer-badge">RER<br>A</div>
+    <div class="logo-text">Trafic <span>Temps Réel</span></div>
+  </div>
+  <div class="live-indicator">
+    <div class="live-dot"></div>
+    LIVE
+  </div>
+</header>
+
+<main>
+
+  <div class="api-warning">
+    ⚠️ <strong>Sécurité :</strong> Votre clé API est actuellement intégrée dans ce fichier HTML. Avant de publier sur GitHub public, envisagez d'utiliser un backend proxy pour cacher la clé, ou placez le dépôt en privé.
+  </div>
+
+  <div class="controls">
+    <div class="field">
+      <label>Gare / Arrêt</label>
+      <select id="stationSelect">
+        <option value="STIF:StopArea:SP:71370:">Châtelet–Les Halles</option>
+        <option value="STIF:StopArea:SP:71072:">Gare de Lyon</option>
+        <option value="STIF:StopArea:SP:70565:">Nation</option>
+        <option value="STIF:StopArea:SP:71137:">Vincennes</option>
+        <option value="STIF:StopArea:SP:71127:">Saint-Maur–Créteil</option>
+        <option value="STIF:StopArea:SP:70788:">La Défense</option>
+        <option value="STIF:StopArea:SP:71368:">Auber</option>
+        <option value="STIF:StopArea:SP:71064:">Charles de Gaulle–Étoile</option>
+        <option value="STIF:StopArea:SP:70943:">Nanterre–Préfecture</option>
+        <option value="STIF:StopArea:SP:70813:">Cergy-le-Haut</option>
+        <option value="STIF:StopArea:SP:70823:">Pontoise</option>
+        <option value="STIF:StopArea:SP:70777:">Poissy</option>
+        <option value="STIF:StopArea:SP:71376:">Saint-Germain-en-Laye</option>
+        <option value="STIF:StopArea:SP:70942:">Boissy-Saint-Léger</option>
+        <option value="STIF:StopArea:SP:71375:">Marne-la-Vallée – Chessy</option>
+        <option value="custom">— Identifiant personnalisé —</option>
+      </select>
     </div>
+    <div class="field" id="customField" style="display:none">
+      <label>Identifiant STIF</label>
+      <input type="text" id="customId" placeholder="STIF:StopArea:SP:XXXXX:" />
+    </div>
+    <div class="field">
+      <label>Intervalle auto (s)</label>
+      <select id="intervalSelect">
+        <option value="30">30 secondes</option>
+        <option value="60" selected>1 minute</option>
+        <option value="120">2 minutes</option>
+        <option value="0">Manuel</option>
+      </select>
+    </div>
+    <button class="btn-refresh" id="btnRefresh" onclick="fetchData()">
+      ↻ Actualiser
+    </button>
+  </div>
 
-    <script>
-        const API_KEY = "7ea58a7fcd5301b0425dd47ea3212ab8640bc0b09c90031a6474e8c6";
+  <div class="refresh-bar">
+    <div class="refresh-progress" id="refreshProgress" style="width:100%"></div>
+  </div>
 
-        async function update() {
-            try {
-                // Construction de l'URL basée sur le contrat fourni
-                const target = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/line_reports?disable_geojson=true&count=15";
-                const url = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`;
-                
-                const response = await fetch(url, { 
-                    headers: { 'apikey': API_KEY } 
-                });
-                
-                const json = await response.json();
-                const data = JSON.parse(json.contents);
-                
-                let html = "";
-                
-                if (data.line_reports) {
-                    data.line_reports.forEach(report => {
-                        const lineName = report.line.code || report.line.name;
-                        const color = report.line.color || "333";
-                        
-                        // On vérifie s'il y a des perturbations (pt_objects)
-                        const hasDisruption = report.pt_objects && report.pt_objects.length > 0;
-                        
-                        html += `
-                        <div class="card ${hasDisruption ? 'disrupted' : ''}">
-                            <span class="line-badge" style="border-bottom: 4px solid #${color}">${lineName}</span>
-                            <span class="alert-title">${hasDisruption ? '⚠️ Perturbation' : '✅ Trafic Normal'}</span>
-                            ${hasDisruption ? `<div class="alert-msg">${report.pt_objects[0].name}</div>` : ''}
-                        </div>`;
-                    });
-                    document.getElementById('display').innerHTML = html;
-                } else {
-                    document.getElementById('display').innerHTML = "<div class='status'>✅ TOUT LE RÉSEAU EST FLUIDE</div>";
-                }
-            } catch (e) {
-                document.getElementById('display').innerHTML = "<div class='status' style='color:red'>Erreur : Vérifiez la connexion au serveur PRIM</div>";
-            }
-        }
+  <div class="status-bar">
+    <div class="updated" id="lastUpdate">En attente…</div>
+    <div class="traffic-status">
+      <div class="traffic-dot" id="trafficDot"></div>
+      <span id="trafficLabel">Chargement…</span>
+    </div>
+  </div>
 
-        update();
-        setInterval(update, 120000); // Mise à jour toutes les 2 minutes
-    </script>
+  <!-- Prochains départs -->
+  <div class="section-title">Prochains passages</div>
+  <div id="departuresList" class="departures-grid">
+    <div class="empty">
+      <span class="icon">🚆</span>
+      <div class="title">Cliquez sur Actualiser</div>
+      <div>pour charger les prochains passages du RER A</div>
+    </div>
+  </div>
+
+  <!-- Infos trafic -->
+  <div class="messages-section">
+    <div class="section-title">Infos trafic</div>
+    <div id="messagesList"></div>
+  </div>
+
+</main>
+
+<script>
+  /* ────────────────────────────────────────────
+     CONFIGURATION
+  ──────────────────────────────────────────── */
+  // ⚠️ Remplacez cette URL par celle de votre Cloudflare Worker
+  const PROXY_BASE = 'https://rera-proxy.sammy-avcuoglu.workers.dev/proxy';
+
+  // ID de la ligne RER A dans le référentiel IDFM
+  const RERA_LINE_ID = 'IDFM:C01742';
+
+  let refreshTimer = null;
+  let countdownTimer = null;
+  let countdown = 60;
+
+  /* ────────────────────────────────────────────
+     UTILITAIRES
+  ──────────────────────────────────────────── */
+  function getStopId() {
+    const sel = document.getElementById('stationSelect');
+    if (sel.value === 'custom') {
+      return document.getElementById('customId').value.trim();
+    }
+    return sel.value;
+  }
+
+  function formatTime(isoString) {
+    if (!isoString) return '--:--';
+    const d = new Date(isoString);
+    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function minutesUntil(isoString) {
+    if (!isoString) return null;
+    const diff = new Date(isoString) - new Date();
+    return Math.round(diff / 60000);
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('btnRefresh');
+    btn.classList.toggle('loading', on);
+    btn.innerHTML = on
+      ? '<span class="spinner"></span>Chargement…'
+      : '↻ Actualiser';
+  }
+
+  /* ────────────────────────────────────────────
+     FETCH PROCHAINS PASSAGES (SIRI-Lite)
+  ──────────────────────────────────────────── */
+  async function fetchDepartures(stopId) {
+    // API Stop Monitoring SIRI-Lite
+    const url = `${PROXY_BASE}/stop-monitoring?MonitoringRef=${encodeURIComponent(stopId)}&LineRef=${encodeURIComponent(RERA_LINE_ID)}&MaximumStopVisits=15`;
+
+    const resp = await fetch(url, {
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`HTTP ${resp.status} — ${errText.slice(0, 200)}`);
+    }
+
+    return resp.json();
+  }
+
+  /* ────────────────────────────────────────────
+     FETCH MESSAGES TRAFIC (GeneralMessage)
+  ──────────────────────────────────────────── */
+  async function fetchMessages() {
+    try {
+      const url = `${PROXY_BASE}/general-message?LineRef=${encodeURIComponent(RERA_LINE_ID)}`;
+      const resp = await fetch(url, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!resp.ok) return [];
+      const data = await resp.json();
+      return extractMessages(data);
+    } catch {
+      return [];
+    }
+  }
+
+  function extractMessages(data) {
+    try {
+      const msgs = data?.Siri?.ServiceDelivery?.GeneralMessageDelivery?.[0]?.InfoMessage ?? [];
+      return msgs.map(m => {
+        const content = m.Content?.Message?.[0]?.MessageText?.value ?? '';
+        const format = m.InfoMessageIdentifier ?? '';
+        return { title: format, body: content, type: 'info' };
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  /* ────────────────────────────────────────────
+     RENDU
+  ──────────────────────────────────────────── */
+  function renderDepartures(data) {
+    const list = document.getElementById('departuresList');
+    
+    let visits = [];
+    try {
+      const delivery = data?.Siri?.ServiceDelivery?.StopMonitoringDelivery?.[0];
+      visits = delivery?.MonitoredStopVisit ?? [];
+    } catch {
+      visits = [];
+    }
+
+    if (!visits.length) {
+      list.innerHTML = `<div class="empty"><span class="icon">🕐</span><div class="title">Aucun passage trouvé</div><div>Essayez une autre gare ou attendez la prochaine actualisation.</div></div>`;
+      updateTrafficStatus('unknown');
+      return;
+    }
+
+    let hasDisruption = false;
+    let hasDelay = false;
+
+    const rows = visits.map(v => {
+      const call = v.MonitoredVehicleJourney?.MonitoredCall ?? {};
+      const journey = v.MonitoredVehicleJourney ?? {};
+
+      const dept = call.ExpectedDepartureTime || call.AimedDepartureTime || call.ExpectedArrivalTime || call.AimedArrivalTime;
+      const aimed = call.AimedDepartureTime || call.AimedArrivalTime;
+      const dest = journey.DestinationName?.[0]?.value ?? journey.DirectionName?.[0]?.value ?? '—';
+      const mission = journey.JourneyNote?.[0]?.value ?? '';
+      const cancelled = call.DepartureStatus === 'cancelled' || journey.Monitored === false;
+      
+      const mins = minutesUntil(dept);
+      const delayed = dept && aimed && new Date(dept) - new Date(aimed) > 60000;
+
+      if (cancelled) hasDisruption = true;
+      if (delayed) hasDelay = true;
+
+      let timeClass = '';
+      if (mins !== null && mins <= 2) timeClass = 'very-soon';
+      else if (mins !== null && mins <= 5) timeClass = 'soon';
+
+      const waitText = mins === null ? '—' : mins <= 0 ? '<span class="minutes">À quai</span>' : `<span class="minutes">${mins}</span> min`;
+
+      let badgeHtml = '';
+      if (cancelled) badgeHtml = '<span class="badge cancelled">Supprimé</span>';
+      else if (delayed) badgeHtml = '<span class="badge delayed">Retard</span>';
+      else badgeHtml = '<span class="badge on-time">À l\'heure</span>';
+
+      return `
+        <div class="departure-row ${cancelled ? 'cancelled' : ''}">
+          <div class="dep-time ${timeClass}">${formatTime(dept)}</div>
+          <div>
+            <div class="dep-destination">${escapeHtml(dest)}</div>
+            ${mission ? `<div class="dep-mission">${escapeHtml(mission)}</div>` : ''}
+          </div>
+          <div class="dep-wait">${waitText}</div>
+          <div class="dep-status">${badgeHtml}</div>
+        </div>`;
+    }).join('');
+
+    list.innerHTML = rows;
+
+    if (hasDisruption) updateTrafficStatus('disrupted');
+    else if (hasDelay) updateTrafficStatus('warning');
+    else updateTrafficStatus('ok');
+  }
+
+  function renderMessages(messages) {
+    const el = document.getElementById('messagesList');
+    if (!messages.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Aucun message en cours.</div>';
+      return;
+    }
+    el.innerHTML = messages.map(m => `
+      <div class="message-card ${m.type}">
+        ${m.title ? `<div class="message-title">${escapeHtml(m.title)}</div>` : ''}
+        <div class="message-body">${escapeHtml(m.body)}</div>
+      </div>
+    `).join('');
+  }
+
+  function updateTrafficStatus(status) {
+    const dot = document.getElementById('trafficDot');
+    const label = document.getElementById('trafficLabel');
+    dot.className = 'traffic-dot';
+    if (status === 'ok') { label.textContent = 'Trafic normal'; }
+    else if (status === 'warning') { dot.classList.add('warning'); label.textContent = 'Perturbations mineures'; }
+    else if (status === 'disrupted') { dot.classList.add('disrupted'); label.textContent = 'Trafic perturbé'; }
+    else { label.textContent = 'Statut inconnu'; }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ────────────────────────────────────────────
+     FETCH PRINCIPAL
+  ──────────────────────────────────────────── */
+  async function fetchData() {
+    const stopId = getStopId();
+    if (!stopId) {
+      alert('Veuillez entrer un identifiant de gare.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const [departures, messages] = await Promise.all([
+        fetchDepartures(stopId),
+        fetchMessages()
+      ]);
+
+      renderDepartures(departures);
+      renderMessages(messages);
+
+      const now = new Date().toLocaleTimeString('fr-FR');
+      document.getElementById('lastUpdate').textContent = `Actualisé à ${now}`;
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('departuresList').innerHTML = `
+        <div class="error-box">
+          <strong>Erreur lors de la récupération des données</strong><br/>
+          ${escapeHtml(err.message)}<br/><br/>
+          Vérifiez que votre clé API est valide et que l'identifiant de gare est correct.
+          Le navigateur peut aussi bloquer la requête (CORS) — dans ce cas, utilisez un serveur proxy ou l'extension CORS.
+        </div>`;
+      updateTrafficStatus('disrupted');
+    }
+
+    setLoading(false);
+  }
+
+  /* ────────────────────────────────────────────
+     AUTO REFRESH + BARRE DE PROGRESSION
+  ──────────────────────────────────────────── */
+  function startAutoRefresh() {
+    clearInterval(refreshTimer);
+    clearInterval(countdownTimer);
+
+    const interval = parseInt(document.getElementById('intervalSelect').value);
+    if (!interval) {
+      document.getElementById('refreshProgress').style.width = '100%';
+      return;
+    }
+
+    countdown = interval;
+    const bar = document.getElementById('refreshProgress');
+
+    countdownTimer = setInterval(() => {
+      countdown--;
+      bar.style.width = `${(countdown / interval) * 100}%`;
+      if (countdown <= 0) {
+        countdown = interval;
+        fetchData();
+      }
+    }, 1000);
+  }
+
+  /* ────────────────────────────────────────────
+     EVENTS
+  ──────────────────────────────────────────── */
+  document.getElementById('stationSelect').addEventListener('change', function() {
+    const show = this.value === 'custom';
+    document.getElementById('customField').style.display = show ? '' : 'none';
+  });
+
+  document.getElementById('intervalSelect').addEventListener('change', startAutoRefresh);
+
+  /* ────────────────────────────────────────────
+     INIT
+  ──────────────────────────────────────────── */
+  fetchData();
+  startAutoRefresh();
+</script>
+
 </body>
 </html>
