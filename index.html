@@ -292,25 +292,32 @@
 
 <script>
   var PROXY      = 'https://rera-proxy.sammy-avcuoglu.workers.dev/proxy';
-  var STOP       = 'STIF:StopArea:SP:43191:';
+  var STOPS      = [
+    'STIF:StopArea:SP:43191:',  // Sartrouville
+    'STIF:StopArea:SP:44559:',  // Cergy Prefecture
+    'STIF:StopArea:SP:43082:'   // Houilles-Carrieres sur Seine
+  ];
   var LINE       = 'STIF:Line::C01742:';
   var LINE_NAVITIA = 'line:IDFM:C01742';
   var timer      = null;
+  var retardsParGare = {};  // stockage résultats par gare
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   function fetchData() {
-    fetch(PROXY + '/stop-monitoring?MonitoringRef=' + encodeURIComponent(STOP), {
-      headers: { 'Accept': 'application/json' }
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { renderRetards(d); })
-    .catch(function(e) {
-      document.getElementById('panel-retards').innerHTML =
-        '<div class="error-box">Erreur : ' + esc(e.message) + '</div>';
+    // Fetch toutes les gares en parallèle
+    retardsParGare = {};
+    var promises = STOPS.map(function(stop) {
+      return fetch(PROXY + '/stop-monitoring?MonitoringRef=' + encodeURIComponent(stop), {
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { retardsParGare[stop] = d; })
+      .catch(function() { retardsParGare[stop] = null; });
     });
+    Promise.all(promises).then(function() { renderRetards(); });
 
     fetch(PROXY + '/general-message?LineRef=' + encodeURIComponent(LINE), {
       headers: { 'Accept': 'application/json' }
@@ -333,27 +340,43 @@
     startCountdown();
   }
 
-  function renderRetards(data) {
-    var visits = [];
-    try {
-      visits = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || [];
-    } catch(e) {}
+  function renderRetards() {
+    // Collecter tous les trains de toutes les gares
+    var byMission = {};  // code mission -> retard max
 
-    var retards = [];
-    for (var i = 0; i < visits.length; i++) {
-      var v     = visits[i];
-      var call  = (v.MonitoredVehicleJourney && v.MonitoredVehicleJourney.MonitoredCall) || {};
-      var j2    = v.MonitoredVehicleJourney || {};
-      var dept  = call.ExpectedDepartureTime || call.AimedDepartureTime;
-      var aimed = call.AimedDepartureTime;
-      if (!dept || !aimed) continue;
-      var delayMins = Math.round((new Date(dept) - new Date(aimed)) / 60000);
-      if (delayMins <= 3) continue;
-      var mission = '';
-      try { mission = j2.VehicleJourneyName[0].value; } catch(e) {}
-      if (!mission) try { mission = j2.JourneyNote[0].value; } catch(e) {}
-      retards.push({ mission: mission, delay: delayMins });
+    for (var stop in retardsParGare) {
+      var data = retardsParGare[stop];
+      var visits = [];
+      try {
+        visits = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || [];
+      } catch(e) {}
+
+      for (var i = 0; i < visits.length; i++) {
+        var v    = visits[i];
+        var call = (v.MonitoredVehicleJourney && v.MonitoredVehicleJourney.MonitoredCall) || {};
+        var j2   = v.MonitoredVehicleJourney || {};
+        var dept = call.ExpectedDepartureTime || call.AimedDepartureTime;
+        var aimed = call.AimedDepartureTime;
+        if (!dept || !aimed) continue;
+        var delayMins = Math.round((new Date(dept) - new Date(aimed)) / 60000);
+        if (delayMins <= 3) continue;
+        var mission = '';
+        try { mission = j2.VehicleJourneyName[0].value; } catch(e) {}
+        if (!mission) try { mission = j2.JourneyNote[0].value; } catch(e) {}
+        if (!mission) continue;
+        // Déduplication : on garde le retard le plus élevé par mission
+        if (!byMission[mission] || delayMins > byMission[mission]) {
+          byMission[mission] = delayMins;
+        }
+      }
     }
+
+    // Convertir en tableau trié par retard décroissant
+    var retards = [];
+    for (var m in byMission) {
+      retards.push({ mission: m, delay: byMission[m] });
+    }
+    retards.sort(function(a, b) { return b.delay - a.delay; });
 
     var el = document.getElementById('panel-retards');
     if (!retards.length) {
