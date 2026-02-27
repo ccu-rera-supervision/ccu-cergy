@@ -161,9 +161,10 @@
       width: 70%; padding: 2.5vw 0;
       border-radius: 2vw;
     }
-    .trafic-state-box.fluide    .trafic-state-capsule { background: var(--green); }
-    .trafic-state-box.perturbe  .trafic-state-capsule { background: var(--orange); }
-    .trafic-state-box.interrompu .trafic-state-capsule { background: var(--red); }
+    .trafic-state-box.fluide         .trafic-state-capsule { background: var(--green); }
+    .trafic-state-box.perturbe        .trafic-state-capsule { background: var(--orange); }
+    .trafic-state-box.tres-perturbe   .trafic-state-capsule { background: var(--red); }
+    .trafic-state-box.interrompu      .trafic-state-capsule { background: var(--red); }
     .trafic-state-label {
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 900; font-size: 5vw;
@@ -512,9 +513,10 @@
     var label = document.getElementById('trafic-label');
     var comm  = document.getElementById('panel-comm-sncf');
 
-    var hasInterrompu = false;
-    var hasPerturbe   = false;
-    var messages      = [];
+    var hasInterrompu   = false;
+    var hasTresPerturbe = false;
+    var hasPerturbe     = false;
+    var messages        = [];
 
     for (var i = 0; i < disruptions.length; i++) {
       var d = disruptions[i];
@@ -535,7 +537,6 @@
         var ch = (msgs[m].channel && msgs[m].channel.name) || '';
         if (ch === 'titre') titre = msgs[m].text || '';
         if (ch === 'moteur' && !texte) {
-          // Nettoyer les balises HTML puis décoder toutes les entités
           var raw = (msgs[m].text || '').replace(/<[^>]+>/g, ' ');
           texte = decodeHtml(raw).replace(/\s+/g, ' ').trim();
         }
@@ -545,23 +546,22 @@
 
       messages.push({ titre: titre, texte: affichage, cause: d.cause || '' });
 
-      // Déterminer état trafic basé SNCF
-      var cause = (d.cause || '').toLowerCase();
-      var effect = ((d.severity && d.severity.effect) || '').toLowerCase();
-      // Travaux planifiés → pas d'impact état trafic, mais on garde le message
-      if (cause === 'travaux') continue;
-      // Incident réel : on évalue la sévérité
+      // Déterminer état trafic — basé uniquement sur le texte du message
       var low = affichage.toLowerCase();
-      if (effect === 'no_service' || low.indexOf('interrompu') !== -1) {
-        hasInterrompu = true;
-      } else if (effect === 'significant_delays' || effect === 'reduced_service' ||
-                 low.indexOf('perturbé') !== -1 || low.indexOf('perturbe') !== -1 ||
-                 low.indexOf('très perturbé') !== -1) {
-        hasPerturbe = true;
-      } else {
-        // Toute autre perturbation non-travaux = au moins perturbé
-        hasPerturbe = true;
-      }
+      var isInterrompu   = low.indexOf('interrompu') !== -1;
+      var isTravaux      = low.indexOf('travaux') !== -1;
+      var isTresPerturbe = low.indexOf('très perturbé') !== -1 || low.indexOf('tres perturbe') !== -1 || low.indexOf('très perturbe') !== -1;
+      var isPerturbe     = low.indexOf('perturbé') !== -1 || low.indexOf('perturbe') !== -1;
+
+      // Règle : interrompu + travaux dans le même message → ignorer pour l'état
+      if (isInterrompu && isTravaux) continue;
+      // Règle : travaux seuls → ignorer pour l'état
+      if (isTravaux && !isInterrompu) continue;
+
+      if (isInterrompu)        hasInterrompu   = true;
+      else if (isTresPerturbe) hasTresPerturbe = true;
+      else if (isPerturbe)     hasPerturbe     = true;
+      else                     hasPerturbe     = true; // toute perturbation non classifiée
     }
 
     // Mettre à jour état du trafic (basé SNCF uniquement)
@@ -569,6 +569,9 @@
     if (hasInterrompu) {
       box.classList.add('interrompu');
       label.textContent = 'Interrompu';
+    } else if (hasTresPerturbe) {
+      box.classList.add('tres-perturbe');
+      label.textContent = 'Très perturbé';
     } else if (hasPerturbe) {
       box.classList.add('perturbe');
       label.textContent = 'Perturbé';
