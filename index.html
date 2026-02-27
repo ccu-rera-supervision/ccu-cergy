@@ -182,6 +182,20 @@
       display: flex; align-items: center; justify-content: center;
       padding: 1rem; color: var(--muted); font-size: 0.9rem;
     }
+    /* 2 PANNEAUX COMMUNICATION */
+    .comm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .comm-source-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.85vw;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .comm-source-label.sncf { color: #e8a020; }
+    .comm-source-label.ratp { color: #6b9fe4; }
 
     .timestamp {
       text-align: center; font-size: 0.7rem;
@@ -231,8 +245,17 @@
 <div class="grid-bottom">
   <div class="panel">
     <div class="panel-title">Communication</div>
-    <div class="panel-body" id="panel-comm">
-      <div class="no-comm">Chargement…</div>
+    <div class="panel-body">
+      <div class="comm-grid">
+        <div>
+          <div class="comm-source-label sncf">🚆 SNCF</div>
+          <div id="panel-comm-sncf"><div class="no-comm">Chargement…</div></div>
+        </div>
+        <div>
+          <div class="comm-source-label ratp">🚇 RATP</div>
+          <div id="panel-comm-ratp"><div class="no-comm">Chargement…</div></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -240,10 +263,11 @@
 <div class="timestamp" id="ts">—</div>
 
 <script>
-  var PROXY = 'https://rera-proxy.sammy-avcuoglu.workers.dev/proxy';
-  var STOP  = 'STIF:StopArea:SP:43191:';
-  var LINE  = 'STIF:Line::C01742:';
-  var timer = null;
+  var PROXY      = 'https://rera-proxy.sammy-avcuoglu.workers.dev/proxy';
+  var STOP       = 'STIF:StopArea:SP:43191:';
+  var LINE       = 'STIF:Line::C01742:';
+  var LINE_NAVITIA = 'line:IDFM:C01742';
+  var timer      = null;
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -264,7 +288,14 @@
       headers: { 'Accept': 'application/json' }
     })
     .then(function(r) { return r.json(); })
-    .then(function(d) { renderTrafic(d); })
+    .then(function(d) { renderTraficRATP(d); })
+    .catch(function() {});
+
+    fetch(PROXY + '/v2/navitia/line_reports/lines/' + encodeURIComponent(LINE_NAVITIA) + '/line_reports', {
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { renderTraficSNCF(d); })
     .catch(function() {});
 
     document.getElementById('ts').textContent =
@@ -312,35 +343,90 @@
     el.innerHTML = html;
   }
 
-  function renderTrafic(data) {
+  function renderTraficRATP(data) {
     var msgs = [];
     try {
       msgs = data.Siri.ServiceDelivery.GeneralMessageDelivery[0].InfoMessage || [];
     } catch(e) {}
 
-    var box   = document.getElementById('trafic-box');
-    var label = document.getElementById('trafic-label');
-    var comm  = document.getElementById('panel-comm');
-
-    var hasInterrompu = false;
-    var hasPerturbe   = false;
-    var allBodies     = [];
+    var comm = document.getElementById('panel-comm-ratp');
+    var allBodies = [];
 
     for (var i = 0; i < msgs.length; i++) {
       var body = '';
       try { body = msgs[i].Content.Message[0].MessageText.value; } catch(e) {}
       if (!body) continue;
       allBodies.push(body);
-      var low = body.toLowerCase();
-      var isInterrompu = low.indexOf('interrompu') !== -1;
-      var isTravaux    = low.indexOf('travaux') !== -1;
-      // Interrompu réel = interrompu SANS travaux
-      if (isInterrompu && !isTravaux) hasInterrompu = true;
-      // interrompu + travaux → ignoré pour l'état du trafic (travaux planifiés)
-      else if (!isInterrompu && (low.indexOf('perturbé') !== -1 || low.indexOf('perturbe') !== -1)) hasPerturbe = true;
     }
 
-    // Panneau état
+    if (!allBodies.length) {
+      comm.innerHTML = '<div class="no-comm">Aucun message en cours.</div>';
+      return;
+    }
+    var html = '';
+    for (var j = 0; j < allBodies.length; j++) {
+      var txt  = allBodies[j];
+      var low2 = txt.toLowerCase();
+      var c    = '';
+      var isInt2 = low2.indexOf('interrompu') !== -1;
+      var isTrv2 = low2.indexOf('travaux') !== -1;
+      if (isInt2 && !isTrv2) c = 'interrompu';
+      else if (isInt2 && isTrv2) c = 'perturbe';
+      else if (low2.indexOf('perturbé') !== -1 || low2.indexOf('perturbe') !== -1) c = 'perturbe';
+      html += '<div class="comm-msg ' + c + '">' + esc(txt) + '</div>';
+    }
+    comm.innerHTML = html;
+  }
+
+  function renderTraficSNCF(data) {
+    var disruptions = [];
+    try { disruptions = data.disruptions || []; } catch(e) {}
+
+    var box   = document.getElementById('trafic-box');
+    var label = document.getElementById('trafic-label');
+    var comm  = document.getElementById('panel-comm-sncf');
+
+    var hasInterrompu = false;
+    var hasPerturbe   = false;
+    var messages      = [];
+
+    for (var i = 0; i < disruptions.length; i++) {
+      var d = disruptions[i];
+
+      // Ignorer les pannes d'ascenseurs
+      var tags = d.tags || [];
+      var isAscenseur = false;
+      for (var t = 0; t < tags.length; t++) {
+        if (tags[t] === 'Ascenseur') { isAscenseur = true; break; }
+      }
+      if (isAscenseur) continue;
+
+      // Récupérer le texte du message (canal "titre" ou "moteur")
+      var titre = '';
+      var texte = '';
+      var msgs = d.messages || [];
+      for (var m = 0; m < msgs.length; m++) {
+        var ch = (msgs[m].channel && msgs[m].channel.name) || '';
+        if (ch === 'titre') titre = msgs[m].text || '';
+        if (ch === 'moteur' && !texte) {
+          // Nettoyer les balises HTML
+          texte = (msgs[m].text || '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g,'&').replace(/&eacute;/g,'é').replace(/&#233;/g,'é').replace(/&#224;/g,'à').replace(/\s+/g,' ').trim();
+        }
+      }
+      var affichage = texte || titre;
+      if (!affichage) continue;
+
+      messages.push({ titre: titre, texte: affichage, cause: d.cause || '' });
+
+      // Déterminer état trafic basé SNCF
+      var cause = (d.cause || '').toLowerCase();
+      var effect = ((d.severity && d.severity.effect) || '').toLowerCase();
+      if (cause === 'travaux') continue; // travaux planifiés → pas d'impact état trafic
+      if (effect === 'no_service' || affichage.toLowerCase().indexOf('interrompu') !== -1) hasInterrompu = true;
+      else hasPerturbe = true;
+    }
+
+    // Mettre à jour état du trafic (basé SNCF uniquement)
     box.className = 'trafic-state-box';
     if (hasInterrompu) {
       box.classList.add('interrompu');
@@ -353,23 +439,22 @@
       label.textContent = 'Fluide';
     }
 
-    // Panneau communication — tous les messages
-    if (!allBodies.length) {
+    // Panneau communication SNCF
+    if (!messages.length) {
       comm.innerHTML = '<div class="no-comm">Aucun message en cours.</div>';
       return;
     }
     var html = '';
-    for (var j = 0; j < allBodies.length; j++) {
-      var txt  = allBodies[j];
-      var low2 = txt.toLowerCase();
-      var c    = '';
-      var isInt2 = low2.indexOf('interrompu') !== -1;
-      var isTrv2 = low2.indexOf('travaux') !== -1;
-      // Interrompu + travaux = bordure orange (travaux planifiés)
-      if (isInt2 && !isTrv2) c = 'interrompu';
-      else if (isInt2 && isTrv2) c = 'perturbe';
-      else if (low2.indexOf('perturbé') !== -1 || low2.indexOf('perturbe') !== -1) c = 'perturbe';
-      html += '<div class="comm-msg ' + c + '">' + esc(txt) + '</div>';
+    for (var k = 0; k < messages.length; k++) {
+      var cause2 = messages[k].cause.toLowerCase();
+      var txt2   = messages[k].texte.toLowerCase();
+      var c = '';
+      if (txt2.indexOf('interrompu') !== -1 && cause2 !== 'travaux') c = 'interrompu';
+      else if (cause2 === 'travaux') c = 'perturbe';
+      else c = 'perturbe';
+      html += '<div class="comm-msg ' + c + '">';
+      if (messages[k].titre) html += '<strong>' + esc(messages[k].titre) + '</strong><br>';
+      html += esc(messages[k].texte) + '</div>';
     }
     comm.innerHTML = html;
   }
