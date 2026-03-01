@@ -126,6 +126,19 @@
     }
     .panel-body { padding: 0.75rem 1.2rem; flex: 1; overflow: hidden; }
 
+    /* ── TIMER PANNEAU ── */
+    .panel-title-wrap { display: flex; flex-direction: column; gap: 0; }
+    .panel-title-row { display: flex; align-items: center; justify-content: space-between; }
+    .panel-timer {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600; font-size: 0.75rem;
+      color: var(--muted); min-width: 2rem; text-align: right;
+    }
+    .panel-timer.urgent { color: var(--orange); }
+    .panel-prog-wrap { height: 1px; background: rgba(255,255,255,0.06); width: 60%; margin-top: 2px; }
+    .panel-prog-bar { height: 100%; background: var(--green); transform-origin: left; }
+    .panel-prog-bar.urgent { background: var(--orange); }
+
     /* ── ÉTAT DU TRAFIC (petit, en haut à gauche) ── */
     .panel-trafic {
       flex-shrink: 0;
@@ -318,7 +331,17 @@
 
     <!-- Communication SNCF -->
     <div class="panel panel-comm">
-      <div class="panel-title">🚆 Communication SNCF</div>
+      <div class="panel-title">
+        <div class="panel-title-wrap">
+          <div class="panel-title-row">
+            <span>🚆 Communication SNCF</span>
+            <span class="panel-timer" id="timer-sncf">20s</span>
+          </div>
+          <div class="panel-prog-wrap">
+            <div class="panel-prog-bar" id="prog-sncf"></div>
+          </div>
+        </div>
+      </div>
       <div class="panel-body" id="panel-comm-sncf">
         <div class="no-comm">Chargement…</div>
       </div>
@@ -326,7 +349,17 @@
 
     <!-- Communication RATP -->
     <div class="panel panel-comm">
-      <div class="panel-title">🚇 Communication RATP</div>
+      <div class="panel-title">
+        <div class="panel-title-wrap">
+          <div class="panel-title-row">
+            <span>🚇 Communication RATP</span>
+            <span class="panel-timer" id="timer-ratp">20s</span>
+          </div>
+          <div class="panel-prog-wrap">
+            <div class="panel-prog-bar" id="prog-ratp"></div>
+          </div>
+        </div>
+      </div>
       <div class="panel-body" id="panel-comm-ratp">
         <div class="no-comm">Chargement…</div>
       </div>
@@ -417,6 +450,8 @@
     document.getElementById('ts').textContent =
       'Actualisé à ' + new Date().toLocaleTimeString('fr-FR',
         { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+    demarrerTimerComm();
 
     clearTimeout(timer);
     timer = setTimeout(fetchData, 20000);
@@ -724,6 +759,27 @@
       panel.classList.remove('visible');
       img.src = '';
     }
+  }
+
+  // ── TIMER VISUEL PANNEAU SNCF ──
+  var commStart = null, commRAF = null;
+  function demarrerTimerComm() {
+    commStart = Date.now();
+    if (commRAF) cancelAnimationFrame(commRAF);
+    function tick() {
+      var elapsed = Date.now() - commStart;
+      var pct = Math.min(elapsed / 20000, 1);
+      var reste = Math.ceil((20000 - elapsed) / 1000);
+      if (reste < 0) reste = 0;
+      ['sncf','ratp'].forEach(function(id) {
+        var bar = document.getElementById('prog-'+id);
+        var tmr = document.getElementById('timer-'+id);
+        if (bar) { bar.style.transform = 'scaleX('+(1-pct)+')'; bar.classList.toggle('urgent', pct > 0.75); }
+        if (tmr) { tmr.textContent = reste+'s'; tmr.classList.toggle('urgent', reste <= 5); }
+      });
+      if (pct < 1) commRAF = requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   }
 
   fetchData();
