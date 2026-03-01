@@ -663,7 +663,7 @@
     var badgeTxt = data.mission || '?';
     if (data.retard > 0) badgeTxt += ' +' + data.retard + 'min';
     badge.textContent = badgeTxt;
-    badge.className = 'train-badge visible ' + (data.retard > 0 ? 'en-retard' : 'a-lheure');
+    badge.className = 'train-badge visible ' + (data.retard > 3 ? 'en-retard' : 'a-lheure');
     heure.textContent = data.heureEstimee; heure.className = 'gare-heure ' + etat;
     att.textContent = data.attente <= 0 ? 'À quai' : data.attente + ' min';
     att.className = 'gare-attente ' + etat;
