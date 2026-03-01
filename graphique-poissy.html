@@ -303,33 +303,13 @@
   <!-- TRAIT 2 : Sens Poissy ← -->
   <div class="rail">
 
-    <!-- Houilles -->
+    <!-- Poissy terminus -->
     <div class="gare">
-      <div class="train-badge" id="bdg-2-houilles">…</div>
-      <div class="gare-point load" id="pt-2-houilles"></div>
+      <div class="train-badge" style="opacity:0"></div>
+      <div class="gare-point gris"></div>
       <div class="gare-info">
-        <div class="gare-heure muted" id="heure-2-houilles">--:--</div>
-        <div class="gare-attente muted" id="att-2-houilles">…</div>
-      </div>
-    </div>
-
-    <!-- Sartrouville -->
-    <div class="gare">
-      <div class="train-badge" id="bdg-2-sartr">…</div>
-      <div class="gare-point load" id="pt-2-sartr"></div>
-      <div class="gare-info">
-        <div class="gare-heure muted" id="heure-2-sartr">--:--</div>
-        <div class="gare-attente muted" id="att-2-sartr">…</div>
-      </div>
-    </div>
-
-    <!-- Maisons-Laffitte -->
-    <div class="gare">
-      <div class="train-badge" id="bdg-2-ml">…</div>
-      <div class="gare-point load" id="pt-2-ml"></div>
-      <div class="gare-info">
-        <div class="gare-heure muted" id="heure-2-ml">--:--</div>
-        <div class="gare-attente muted" id="att-2-ml">…</div>
+        <div class="gare-heure muted">—</div>
+        <div class="gare-attente muted">Terminus</div>
       </div>
     </div>
 
@@ -343,13 +323,33 @@
       </div>
     </div>
 
-    <!-- Poissy terminus -->
+    <!-- Maisons-Laffitte -->
     <div class="gare">
-      <div class="train-badge" style="opacity:0"></div>
-      <div class="gare-point gris" id="pt-2-poissy"></div>
+      <div class="train-badge" id="bdg-2-ml">…</div>
+      <div class="gare-point load" id="pt-2-ml"></div>
       <div class="gare-info">
-        <div class="gare-heure muted">—</div>
-        <div class="gare-attente muted">Terminus</div>
+        <div class="gare-heure muted" id="heure-2-ml">--:--</div>
+        <div class="gare-attente muted" id="att-2-ml">…</div>
+      </div>
+    </div>
+
+    <!-- Sartrouville -->
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-sartr">…</div>
+      <div class="gare-point load" id="pt-2-sartr"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-sartr">--:--</div>
+        <div class="gare-attente muted" id="att-2-sartr">…</div>
+      </div>
+    </div>
+
+    <!-- Houilles -->
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-houilles">…</div>
+      <div class="gare-point load" id="pt-2-houilles"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-houilles">--:--</div>
+        <div class="gare-attente muted" id="att-2-houilles">…</div>
       </div>
     </div>
 
@@ -358,7 +358,7 @@
 
   <!-- NOMS -->
   <div class="noms">
-    <div class="nom">Poissy</div>
+    <div class="nom terminus">Poissy</div>
     <div class="nom">Achères<br>Gc</div>
     <div class="nom principale">Maisons<br>Laffitte</div>
     <div class="nom">Sartrouville</div>
@@ -396,18 +396,17 @@
     houilles: 'STIF:StopArea:SP:43082:'
   };
 
-  // Destination filtre par gare (sens Paris)
-  // On garde uniquement les trains dont la destination contient ces mots-clés
+  // Filtre sens Paris : destinations terminus des trains qui passent par la branche Poissy
   var FILTRE_PARIS = {
-    poissy:   ['maisons', 'laffitte', 'nanterre', 'paris', 'boissy', 'marne', 'torcy'],
-    agc:      ['maisons', 'laffitte', 'nanterre', 'paris', 'boissy', 'marne', 'torcy'],
-    ml:       ['nanterre', 'paris', 'boissy', 'marne', 'torcy', 'vincennes', 'nation'],
-    sartr:    ['nanterre', 'paris', 'boissy', 'marne', 'torcy', 'vincennes', 'nation'],
-    houilles: ['nanterre', 'paris', 'boissy', 'marne', 'torcy', 'vincennes', 'nation']
+    poissy:   ['boissy', 'marne', 'torcy', 'chessy', 'defense', 'défense'],
+    agc:      ['boissy', 'marne', 'torcy', 'chessy', 'defense', 'défense'],
+    ml:       ['boissy', 'marne', 'torcy', 'chessy', 'defense', 'défense'],
+    sartr:    ['boissy', 'marne', 'torcy', 'chessy', 'defense', 'défense'],
+    houilles: ['boissy', 'marne', 'torcy', 'chessy', 'defense', 'défense']
   };
 
-  // Filtre sens Poissy
-  var FILTRE_POISSY = ['poissy', 'conflans', 'cergy'];
+  // Filtre sens Poissy : uniquement les trains dont la destination est Poissy
+  var FILTRE_POISSY = ['poissy'];
 
   var debugLines = [];
 
@@ -577,11 +576,11 @@
       { trait:'1', gare:'ml',       stop: STOPS.ml,       filtres: FILTRE_PARIS.ml },
       { trait:'1', gare:'sartr',    stop: STOPS.sartr,    filtres: FILTRE_PARIS.sartr },
       { trait:'1', gare:'houilles', stop: STOPS.houilles, filtres: FILTRE_PARIS.houilles },
-      // TRAIT 2 — Sens Poissy
-      { trait:'2', gare:'houilles', stop: STOPS.houilles, filtres: FILTRE_POISSY },
-      { trait:'2', gare:'sartr',    stop: STOPS.sartr,    filtres: FILTRE_POISSY },
+      // TRAIT 2 — Sens Poissy (Poissy terminus pas d'appel, Houilles à droite)
+      { trait:'2', gare:'agc',      stop: STOPS.agc,      filtres: FILTRE_POISSY },
       { trait:'2', gare:'ml',       stop: STOPS.ml,       filtres: FILTRE_POISSY },
-      { trait:'2', gare:'agc',      stop: STOPS.agc,      filtres: FILTRE_POISSY }
+      { trait:'2', gare:'sartr',    stop: STOPS.sartr,    filtres: FILTRE_POISSY },
+      { trait:'2', gare:'houilles', stop: STOPS.houilles, filtres: FILTRE_POISSY }
     ];
 
     var promesses = taches.map(function(t) {
