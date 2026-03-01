@@ -135,9 +135,7 @@
       color: var(--muted); min-width: 2rem; text-align: right;
     }
     .panel-timer.urgent { color: var(--orange); }
-    .panel-prog-wrap { height: 1px; background: rgba(255,255,255,0.06); width: 60%; margin-top: 2px; }
-    .panel-prog-bar { height: 100%; background: var(--green); transform-origin: left; }
-    .panel-prog-bar.urgent { background: var(--orange); }
+
 
     /* ── ÉTAT DU TRAFIC (petit, en haut à gauche) ── */
     .panel-trafic {
@@ -337,9 +335,7 @@
             <span>🚆 Communication SNCF</span>
             <span class="panel-timer" id="timer-sncf">20s</span>
           </div>
-          <div class="panel-prog-wrap">
-            <div class="panel-prog-bar" id="prog-sncf"></div>
-          </div>
+
         </div>
       </div>
       <div class="panel-body" id="panel-comm-sncf">
@@ -355,9 +351,7 @@
             <span>🚇 Communication RATP</span>
             <span class="panel-timer" id="timer-ratp">20s</span>
           </div>
-          <div class="panel-prog-wrap">
-            <div class="panel-prog-bar" id="prog-ratp"></div>
-          </div>
+
         </div>
       </div>
       <div class="panel-body" id="panel-comm-ratp">
@@ -638,8 +632,9 @@
       for (var t = 0; t < tags.length; t++) { if (tags[t] === 'Ascenseur') { isAscenseur = true; break; } }
       if (isAscenseur) continue;
 
-      // Priorité active > future
+      // Ignorer perturbations terminées
       var status = (d.status || '').toLowerCase();
+      if (status === 'past') continue;
 
       var titre = '', texte = '';
       var msgs = d.messages || [];
@@ -772,9 +767,7 @@
       var reste = Math.ceil((20000 - elapsed) / 1000);
       if (reste < 0) reste = 0;
       ['sncf','ratp'].forEach(function(id) {
-        var bar = document.getElementById('prog-'+id);
         var tmr = document.getElementById('timer-'+id);
-        if (bar) { bar.style.transform = 'scaleX('+(1-pct)+')'; bar.classList.toggle('urgent', pct > 0.75); }
         if (tmr) { tmr.textContent = reste+'s'; tmr.classList.toggle('urgent', reste <= 5); }
       });
       if (pct < 1) commRAF = requestAnimationFrame(tick);
