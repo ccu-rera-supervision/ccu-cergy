@@ -509,6 +509,19 @@
         var visits = [];
         try { visits = data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit || []; } catch(e) {}
 
+        // DEBUG : log toutes les destinations RER A reçues pour cette gare
+        if (stopId === 'STIF:StopArea:SP:47310:') {
+          var destVues = [];
+          for (var di = 0; di < visits.length; di++) {
+            var dj = visits[di].MonitoredVehicleJourney || {};
+            var dlr = ''; try { dlr = dj.LineRef.value; } catch(e) {}
+            if (dlr !== LINE) continue;
+            var dd = ''; try { dd = dj.DestinationName[0].value; } catch(e) {}
+            if (destVues.indexOf(dd) === -1) destVues.push(dd);
+          }
+          debugLines.push('<span style="color:#a78bfa">🔍 ML destinations RER A reçues : ' + (destVues.length > 0 ? destVues.join(' | ') : 'AUCUNE') + '</span>');
+        }
+
         // Filtrer : RER A uniquement + destination correcte
         var candidats = [];
         for (var i = 0; i < visits.length; i++) {
