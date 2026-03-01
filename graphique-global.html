@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Graphique Global — OPERA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:     #1e2330;
+      --bg2:    #252b3b;
+      --bg3:    #2d3447;
+      --border: #353d52;
+      --text:   #e8eaf0;
+      --muted:  #6b7494;
+      --green:  #2ecc71;
+      --orange: #e67e22;
+      --red:    #e74c3c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0.8rem 2rem 1rem;
+      gap: 0.7rem;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 1rem;
+    }
+    .header-left { display: flex; flex-direction: column; gap: 0.05rem; flex-shrink: 0; }
+    .projet-nom {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 0.85rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .graphique-nom {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1.4rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: white;
+    }
+
+    /* ── CAPSULE ÉTAT TRAFIC — au centre du header ── */
+    .header-center { display: flex; align-items: center; justify-content: center; flex: 1; }
+    .trafic-box { display: flex; align-items: center; justify-content: center; }
+    .trafic-capsule {
+      padding: 0.4rem 2.8rem; border-radius: 10px;
+      transition: background 0.5s; background: var(--green);
+    }
+    .trafic-box.fluide        .trafic-capsule { background: var(--green); }
+    .trafic-box.retards       .trafic-capsule { background: #8e6020; }
+    .trafic-box.perturbe      .trafic-capsule { background: var(--orange); }
+    .trafic-box.tres-perturbe .trafic-capsule { background: var(--red); }
+    .trafic-box.interrompu    .trafic-capsule { background: var(--red); }
+    .trafic-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 1.5rem;
+      color: white; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; flex-shrink: 0; }
+    .horloge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 1.8rem;
+      color: white; letter-spacing: 0.05em;
+    }
+    .refresh-info { font-size: 0.60rem; color: var(--muted); letter-spacing: 0.05em; }
+    .progress-wrap { width: 100%; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .progress-bar {
+      height: 100%; background: var(--green); border-radius: 2px;
+      width: 100%; transform-origin: left; transition: background 0.3s;
+    }
+    .progress-bar.epuise { background: var(--orange); }
+
+    /* ── PLAN (cadre commun aux 2 branches) ── */
+    .plan {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem 1.5rem 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: 0.2rem;
+    }
+
+    .branche-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.78rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.1rem;
+    }
+
+    .branche-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 0.4rem 0;
+    }
+
+    /* ── RAILS ── */
+    .rail-fleche {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); background: var(--bg2);
+      padding: 0 5px; z-index: 2; white-space: nowrap;
+    }
+    .rail-fleche.droite { right: 0; }
+    .rail-fleche.gauche { left: 0; }
+
+    .rail {
+      display: flex; align-items: center;
+      position: relative; height: 95px;
+    }
+    .rail::before {
+      content: ''; position: absolute;
+      left: 65px; right: 65px;
+      top: 50%; height: 3px;
+      background: var(--border); z-index: 0;
+    }
+    .rail-sep { height: 4px; }
+
+    .gare {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; position: relative; z-index: 1; gap: 4px;
+    }
+    .train-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 0.88rem;
+      background: #1a3a8f; color: white;
+      padding: 2px 7px; border-radius: 4px;
+      white-space: nowrap; min-height: 20px; text-align: center;
+      transition: opacity 0.3s, background 0.3s; opacity: 0;
+    }
+    .train-badge.visible   { opacity: 1; }
+    .train-badge.a-lheure  { background: #1a6b3a; }
+    .train-badge.en-retard { background: var(--red); }
+
+    .gare-point {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 2px solid var(--muted); background: var(--bg);
+      transition: background 0.5s, border-color 0.5s;
+    }
+    .gare-point.vert   { background: var(--green);  border-color: var(--green); }
+    .gare-point.orange { background: var(--orange); border-color: var(--orange); }
+    .gare-point.rouge  { background: var(--red);    border-color: var(--red); }
+    .gare-point.gris   { background: #2a2f3f; border-color: #3a4052; border-style: dashed; }
+    .gare-point.load   { background: #2a3050; border-color: #3a4060; }
+
+    .gare-info { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .gare-heure {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.95rem; text-align: center; transition: color 0.4s;
+    }
+    .gare-attente {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.80rem; text-align: center; transition: color 0.4s;
+    }
+    .vert   { color: var(--green); }
+    .orange { color: var(--orange); }
+    .rouge  { color: var(--red); }
+    .muted  { color: var(--muted); }
+
+    .noms { display: flex; margin-top: 0.3rem; }
+    .nom {
+      flex: 1; text-align: center;
+      font-size: 0.65rem; color: white;
+      font-weight: 700; line-height: 1.3;
+    }
+
+    /* ── COMMUNICATIONS SNCF ── */
+    .comm-sncf {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; flex-shrink: 0;
+    }
+    .comm-sncf-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: white; text-align: center;
+      padding: 0.35rem 1rem; background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .comm-sncf-body { padding: 0.5rem 1.2rem; min-height: 36px; }
+    .no-comm { color: var(--muted); font-size: 0.82rem; text-align: center; padding: 0.2rem 0; }
+    .comm-msg {
+      font-size: 0.85rem; line-height: 1.5; color: var(--text);
+      border-left: 3px solid var(--orange); padding-left: 0.8rem;
+    }
+    .comm-msg.interrompu { border-color: var(--red); }
+    .comm-time { font-size: 0.70rem; color: var(--muted); text-align: right; margin-top: 0.2rem; }
+    .carousel-wrap { position: relative; }
+    .carousel-slide { display: none; }
+    .carousel-slide.active { display: block; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 0.3rem; }
+    .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+    .carousel-dot.active { background: var(--muted); }
+
+    /* ── LÉGENDE ── */
+    .legende {
+      display: flex; gap: 1.5rem; flex-wrap: wrap;
+      justify-content: center; font-size: 0.68rem;
+      color: var(--muted); flex-shrink: 0;
+    }
+    .leg-item { display: flex; align-items: center; gap: 0.35rem; }
+    .leg-dot { width: 12px; height: 12px; border-radius: 3px; border: 2px solid currentColor; }
+    .leg-dot.vert    { color: var(--green);  background: var(--green); }
+    .leg-dot.orange  { color: var(--orange); background: var(--orange); }
+    .leg-dot.rouge   { color: var(--red);    background: var(--red); }
+    .leg-dot.gris    { color: #444; background: #2a2f3f; border-style: dashed; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="projet-nom">OPERA — Supervision RER A Ouest</div>
+    <div class="graphique-nom">Graphique Global</div>
+  </div>
+  <div class="header-center">
+    <div class="trafic-box fluide" id="trafic-box">
+      <div class="trafic-capsule">
+        <span class="trafic-label" id="trafic-label">Chargement…</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="horloge" id="horloge">--:--</div>
+    <div class="refresh-info" id="refresh-info">Chargement…</div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAN DE LIGNE -->
+<div class="plan">
+
+  <!-- ═══ BRANCHE CERGY ═══ -->
+  <div class="branche-label">Branche Cergy</div>
+
+  <div class="rail">
+    <div class="rail-fleche gauche">Sens Paris</div>
+    <div class="rail-fleche droite">→</div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-cergyh"></div>
+      <div class="gare-point load" id="pt-1-cergyh"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-cergyh">--:--</div>
+        <div class="gare-attente muted" id="att-1-cergyh">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-cergysc"></div>
+      <div class="gare-point load" id="pt-1-cergysc"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-cergysc">--:--</div>
+        <div class="gare-attente muted" id="att-1-cergysc">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-cergypref"></div>
+      <div class="gare-point load" id="pt-1-cergypref"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-cergypref">--:--</div>
+        <div class="gare-attente muted" id="att-1-cergypref">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-neuville"></div>
+      <div class="gare-point load" id="pt-1-neuville"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-neuville">--:--</div>
+        <div class="gare-attente muted" id="att-1-neuville">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-conflans"></div>
+      <div class="gare-point load" id="pt-1-conflans"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-conflans">--:--</div>
+        <div class="gare-attente muted" id="att-1-conflans">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-acheresv"></div>
+      <div class="gare-point load" id="pt-1-acheresv"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-acheresv">--:--</div>
+        <div class="gare-attente muted" id="att-1-acheresv">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1c-ml"></div>
+      <div class="gare-point load" id="pt-1c-ml"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1c-ml">--:--</div>
+        <div class="gare-attente muted" id="att-1c-ml">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1c-sartr"></div>
+      <div class="gare-point load" id="pt-1c-sartr"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1c-sartr">--:--</div>
+        <div class="gare-attente muted" id="att-1c-sartr">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1c-houilles"></div>
+      <div class="gare-point load" id="pt-1c-houilles"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1c-houilles">--:--</div>
+        <div class="gare-attente muted" id="att-1c-houilles">…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rail-sep"></div>
+
+  <div class="rail">
+    <div class="rail-fleche gauche">←</div>
+    <div class="rail-fleche droite">Sens Cergy</div>
+    <div class="gare">
+      <div class="train-badge" style="opacity:0"></div>
+      <div class="gare-point gris"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted">—</div>
+        <div class="gare-attente muted">Terminus</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-cergysc"></div>
+      <div class="gare-point load" id="pt-2-cergysc"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-cergysc">--:--</div>
+        <div class="gare-attente muted" id="att-2-cergysc">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-cergypref"></div>
+      <div class="gare-point load" id="pt-2-cergypref"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-cergypref">--:--</div>
+        <div class="gare-attente muted" id="att-2-cergypref">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-neuville"></div>
+      <div class="gare-point load" id="pt-2-neuville"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-neuville">--:--</div>
+        <div class="gare-attente muted" id="att-2-neuville">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-conflans"></div>
+      <div class="gare-point load" id="pt-2-conflans"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-conflans">--:--</div>
+        <div class="gare-attente muted" id="att-2-conflans">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-acheresv"></div>
+      <div class="gare-point load" id="pt-2-acheresv"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-acheresv">--:--</div>
+        <div class="gare-attente muted" id="att-2-acheresv">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2c-ml"></div>
+      <div class="gare-point load" id="pt-2c-ml"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2c-ml">--:--</div>
+        <div class="gare-attente muted" id="att-2c-ml">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2c-sartr"></div>
+      <div class="gare-point load" id="pt-2c-sartr"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2c-sartr">--:--</div>
+        <div class="gare-attente muted" id="att-2c-sartr">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2c-houilles"></div>
+      <div class="gare-point load" id="pt-2c-houilles"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2c-houilles">--:--</div>
+        <div class="gare-attente muted" id="att-2c-houilles">…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="noms">
+    <div class="nom">Cergy<br>le Haut</div>
+    <div class="nom">Cergy<br>St-C.</div>
+    <div class="nom">Cergy<br>Préf.</div>
+    <div class="nom">Neuville<br>Univ.</div>
+    <div class="nom">Conflans<br>Fin d'Oise</div>
+    <div class="nom">Achères<br>Ville</div>
+    <div class="nom">Maisons<br>Laffitte</div>
+    <div class="nom">Sartrouville</div>
+    <div class="nom">Houilles<br>Carr. s/S</div>
+  </div>
+
+  <!-- ═══ SÉPARATEUR ═══ -->
+  <div class="branche-sep"></div>
+
+  <!-- ═══ BRANCHE POISSY ═══ -->
+  <div class="branche-label">Branche Poissy</div>
+
+  <div class="rail">
+    <div class="rail-fleche gauche">Sens Paris</div>
+    <div class="rail-fleche droite">→</div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-poissy"></div>
+      <div class="gare-point load" id="pt-1-poissy"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-poissy">--:--</div>
+        <div class="gare-attente muted" id="att-1-poissy">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1-agc"></div>
+      <div class="gare-point load" id="pt-1-agc"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1-agc">--:--</div>
+        <div class="gare-attente muted" id="att-1-agc">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1p-ml"></div>
+      <div class="gare-point load" id="pt-1p-ml"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1p-ml">--:--</div>
+        <div class="gare-attente muted" id="att-1p-ml">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1p-sartr"></div>
+      <div class="gare-point load" id="pt-1p-sartr"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1p-sartr">--:--</div>
+        <div class="gare-attente muted" id="att-1p-sartr">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-1p-houilles"></div>
+      <div class="gare-point load" id="pt-1p-houilles"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-1p-houilles">--:--</div>
+        <div class="gare-attente muted" id="att-1p-houilles">…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rail-sep"></div>
+
+  <div class="rail">
+    <div class="rail-fleche gauche">←</div>
+    <div class="rail-fleche droite">Sens Poissy</div>
+    <div class="gare">
+      <div class="train-badge" style="opacity:0"></div>
+      <div class="gare-point gris"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted">—</div>
+        <div class="gare-attente muted">Terminus</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2-agc"></div>
+      <div class="gare-point load" id="pt-2-agc"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2-agc">--:--</div>
+        <div class="gare-attente muted" id="att-2-agc">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2p-ml"></div>
+      <div class="gare-point load" id="pt-2p-ml"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2p-ml">--:--</div>
+        <div class="gare-attente muted" id="att-2p-ml">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2p-sartr"></div>
+      <div class="gare-point load" id="pt-2p-sartr"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2p-sartr">--:--</div>
+        <div class="gare-attente muted" id="att-2p-sartr">…</div>
+      </div>
+    </div>
+    <div class="gare">
+      <div class="train-badge" id="bdg-2p-houilles"></div>
+      <div class="gare-point load" id="pt-2p-houilles"></div>
+      <div class="gare-info">
+        <div class="gare-heure muted" id="heure-2p-houilles">--:--</div>
+        <div class="gare-attente muted" id="att-2p-houilles">…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="noms">
+    <div class="nom">Poissy</div>
+    <div class="nom">Achères<br>Gc</div>
+    <div class="nom">Maisons<br>Laffitte</div>
+    <div class="nom">Sartrouville</div>
+    <div class="nom">Houilles<br>Carr. s/S</div>
+  </div>
+
+</div>
+
+<!-- COMMUNICATIONS SNCF -->
+<div class="comm-sncf">
+  <div class="comm-sncf-title"><span>📡</span> Communication SNCF</div>
+  <div class="comm-sncf-body" id="panel-comm-sncf">
+    <div class="no-comm">Chargement…</div>
+  </div>
+</div>
+
+<!-- LÉGENDE -->
+<div class="legende">
+  <div class="leg-item"><div class="leg-dot vert"></div> Prochain train disponible</div>
+  <div class="leg-item"><div class="leg-dot orange"></div> Attente modérée</div>
+  <div class="leg-item"><div class="leg-dot rouge"></div> Attente longue</div>
+  <div class="leg-item"><div class="leg-dot gris"></div> Terminus</div>
+</div>
+
+<script>
+  var PROXY        = 'https://rera-proxy.sammy-avcuoglu.workers.dev/proxy';
+  var LINE         = 'STIF:Line::C01742:';
+  var LINE_NAVITIA = 'IDFM:C01742';
+  var INTERVALLE   = 45000;
+
+  // ── IDs gares ──
+  var STOPS = {
+    // Cergy
+    cergyh:    'STIF:StopArea:SP:43104:',
+    cergysc:   'STIF:StopArea:SP:47897:',
+    cergypref: 'STIF:StopArea:SP:44559:',
+    neuville:  'STIF:StopArea:SP:47879:',
+    conflans:  'STIF:StopArea:SP:43114:',
+    acheresv:  'STIF:StopArea:SP:46647:',
+    // Partagées
+    ml:        'STIF:StopArea:SP:65048:',
+    sartr:     'STIF:StopArea:SP:43191:',
+    houilles:  'STIF:StopArea:SP:43082:',
+    // Poissy
+    poissy:    'STIF:StopArea:SP:47874:',
+    agc:       'STIF:StopArea:SP:47915:'
+  };
+
+  var FILTRE_PARIS = ['boissy', 'marne', 'torcy', 'chessy', 'defense', 'défense'];
+  var FILTRE_CERGY  = ['cergy'];
+  var FILTRE_POISSY = ['poissy'];
+
+  // ── Seuils par ID de gare virtuel (branche-trait-gare) ──
+  var SEUILS = {
+    // CERGY trait 1 (sens Paris)
+    '1-cergyh':    { orange: 20, rouge: 30 },
+    '1-cergysc':   { orange: 20, rouge: 30 },
+    '1-cergypref': { orange: 20, rouge: 30 },
+    '1-neuville':  { orange: 20, rouge: 30 },
+    '1-conflans':  { orange: 20, rouge: 30 },
+    '1-acheresv':  { orange: 20, rouge: 30 },
+    '1c-ml':       { orange: 11, rouge: 21 },
+    '1c-sartr':    { orange: 11, rouge: 21 },
+    '1c-houilles': { orange: 11, rouge: 21 },
+    // CERGY trait 2 (sens Cergy)
+    '2-cergysc':   { orange: 20, rouge: 30 },
+    '2-cergypref': { orange: 20, rouge: 30 },
+    '2-neuville':  { orange: 20, rouge: 30 },
+    '2-conflans':  { orange: 20, rouge: 30 },
+    '2-acheresv':  { orange: 20, rouge: 30 },
+    '2c-ml':       { orange: 20, rouge: 30 },
+    '2c-sartr':    { orange: 20, rouge: 30 },
+    '2c-houilles': { orange: 20, rouge: 30 },
+    // POISSY trait 1 (sens Paris)
+    '1-poissy':    { orange: 20, rouge: 30 },
+    '1-agc':       { orange: 20, rouge: 30 },
+    '1p-ml':       { orange: 11, rouge: 21 },
+    '1p-sartr':    { orange: 11, rouge: 21 },
+    '1p-houilles': { orange: 11, rouge: 21 },
+    // POISSY trait 2 (sens Poissy)
+    '2-agc':       { orange: 20, rouge: 30 },
+    '2p-ml':       { orange: 20, rouge: 30 },
+    '2p-sartr':    { orange: 20, rouge: 30 },
+    '2p-houilles': { orange: 20, rouge: 30 }
+  };
+
+  var traficSNCFState = 'fluide';
+  var carousels = {};
+
+  // ── HORLOGE ──
+  function majHorloge() {
+    var now = new Date(), h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    document.getElementById('horloge').textContent =
+      (h<10?'0'+h:h)+':'+(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
+  }
+  setInterval(majHorloge, 1000); majHorloge();
+
+  // ── BARRE DE PROGRESSION ──
+  var progressStart = null, progressRAF = null;
+  function demarrerBarre() {
+    progressStart = Date.now();
+    var bar = document.getElementById('progress-bar');
+    bar.classList.remove('epuise');
+    function animer() {
+      var pct = Math.min((Date.now() - progressStart) / INTERVALLE, 1);
+      bar.style.transform = 'scaleX(' + (1 - pct) + ')';
+      if (pct >= 0.85) bar.classList.add('epuise');
+      if (pct < 1) progressRAF = requestAnimationFrame(animer);
+    }
+    if (progressRAF) cancelAnimationFrame(progressRAF);
+    progressRAF = requestAnimationFrame(animer);
+  }
+
+  // ── UTILITAIRES ──
+  function formatHeure(iso) {
+    if (!iso) return '--:--';
+    var d = new Date(iso), h = d.getHours(), m = d.getMinutes();
+    return (h<10?'0'+h:h)+'h'+(m<10?'0'+m:m);
+  }
+  function minutesDepuis(iso) {
+    if (!iso) return null;
+    return Math.round((new Date(iso) - new Date()) / 60000);
+  }
+  function couleur(attMin, key) {
+    if (attMin === null || attMin < 0) return 'muted';
+    var s = SEUILS[key] || { orange: 11, rouge: 21 };
+    if (attMin < s.orange) return 'vert';
+    if (attMin < s.rouge)  return 'orange';
+    return 'rouge';
+  }
+  function destinationMatch(dest, filtres) {
+    if (!dest) return false;
+    var d = dest.toLowerCase();
+    for (var i = 0; i < filtres.length; i++) { if (d.indexOf(filtres[i]) !== -1) return true; }
+    return false;
+  }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function decodeHtml(s) { var t = document.createElement('textarea'); t.innerHTML = s; return t.value; }
+
+  // ── ÉTAT TRAFIC ──
+  function applyTraficState() {
+    var box = document.getElementById('trafic-box'), label = document.getElementById('trafic-label');
+    box.className = 'trafic-box ' + traficSNCFState;
+    var labels = { fluide:'Fluide', perturbe:'Perturbé', 'tres-perturbe':'Très perturbé', interrompu:'Interrompu' };
+    label.textContent = labels[traficSNCFState] || 'Fluide';
+  }
+
+  // ── CARROUSEL ──
+  function startCarousel(id, items) {
+    if (carousels[id]) { clearInterval(carousels[id]); delete carousels[id]; }
+    if (items.length <= 1) return;
+    var idx = 0;
+    function show(i) {
+      var sl = document.querySelectorAll('#'+id+' .carousel-slide'), do_ = document.querySelectorAll('#'+id+' .carousel-dot');
+      for (var s=0;s<sl.length;s++) sl[s].classList.remove('active');
+      for (var d=0;d<do_.length;d++) do_[d].classList.remove('active');
+      if (sl[i]) sl[i].classList.add('active'); if (do_[i]) do_[i].classList.add('active');
+    }
+    show(0);
+    carousels[id] = setInterval(function() { idx=(idx+1)%items.length; show(idx); }, 15000);
+  }
+  function renderCarousel(id, items) {
+    if (carousels[id]) { clearInterval(carousels[id]); delete carousels[id]; }
+    var el = document.getElementById(id);
+    if (!items.length) { el.innerHTML='<div class="no-comm">Aucun message en cours.</div>'; return; }
+    if (items.length === 1) {
+      var t = items[0].time ? '<div class="comm-time">'+esc(items[0].time)+'</div>' : '';
+      el.innerHTML='<div class="comm-msg '+items[0].cls+'">'+items[0].html+t+'</div>'; return;
+    }
+    var h='<div class="carousel-wrap">';
+    for (var i=0;i<items.length;i++) {
+      var t2=items[i].time?'<div class="comm-time">'+esc(items[i].time)+'</div>':'';
+      h+='<div class="carousel-slide'+(i===0?' active':'')+'"><div class="comm-msg '+items[i].cls+'">'+items[i].html+t2+'</div></div>';
+    }
+    h+='</div><div class="carousel-dots">';
+    for (var j=0;j<items.length;j++) h+='<div class="carousel-dot'+(j===0?' active':'')+'"></div>';
+    h+='</div>'; el.innerHTML=h; startCarousel(id, items);
+  }
+
+  // ── FETCH SNCF ──
+  function fetchSNCF() {
+    fetch(PROXY+'/v2/navitia/line_reports/lines/'+encodeURIComponent(LINE_NAVITIA)+'/line_reports', {headers:{'Accept':'application/json'}})
+    .then(function(r){return r.json();}).then(function(data) {
+      var disruptions=[]; try{disruptions=data.disruptions||[];}catch(e){}
+      var hasI=false,hasTP=false,hasP=false,messages=[];
+      for (var i=0;i<disruptions.length;i++) {
+        var d=disruptions[i], tags=d.tags||[], isA=false;
+        for (var t=0;t<tags.length;t++){if(tags[t]==='Ascenseur'){isA=true;break;}} if(isA) continue;
+        var status=(d.status||'').toLowerCase(), titre='', texte='', msgs=d.messages||[];
+        for (var m=0;m<msgs.length;m++) {
+          var ch=(msgs[m].channel&&msgs[m].channel.name)||'';
+          if(ch==='titre'&&!titre) titre=msgs[m].text||'';
+          if(ch==='moteur'&&!texte) texte=decodeHtml((msgs[m].text||'').replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim();
+        }
+        var aff=texte||titre; if(!aff) continue;
+        var pub='';
+        try{var up=d.updated_at||(d.application_periods&&d.application_periods[0]&&d.application_periods[0].begin)||'';if(up) pub='Publié à '+new Date(up).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}catch(e){}
+        var low=aff.toLowerCase();
+        var isI=low.indexOf('interrompu')!==-1, isTr=low.indexOf('travaux')!==-1;
+        var isTP=low.indexOf('très perturbé')!==-1||low.indexOf('tres perturbe')!==-1;
+        var isP=low.indexOf('perturbé')!==-1||low.indexOf('perturbe')!==-1;
+        if(isI&&isTr){messages.push({titre:titre,texte:aff,cause:d.cause||'',status:status,time:pub});continue;}
+        if(isTr&&!isI){messages.push({titre:titre,texte:aff,cause:d.cause||'',status:status,time:pub});continue;}
+        if(isI) hasI=true; else if(isTP) hasTP=true; else hasP=true;
+        messages.push({titre:titre,texte:aff,cause:d.cause||'',status:status,time:pub});
+      }
+      traficSNCFState = hasI?'interrompu':hasTP?'tres-perturbe':hasP?'perturbe':'fluide';
+      applyTraficState();
+      var hasAct=false;
+      for(var a=0;a<messages.length;a++){if(messages[a].status==='active'){hasAct=true;break;}}
+      var filtered=hasAct?messages.filter(function(x){return x.status==='active';}):messages;
+      var seen={},items=[];
+      for(var k=0;k<filtered.length;k++){
+        var key=filtered[k].texte.trim(); if(seen[key]) continue; seen[key]=true;
+        var c=(filtered[k].texte.toLowerCase().indexOf('interrompu')!==-1&&filtered[k].cause.toLowerCase()!=='travaux')?'interrompu':'perturbe';
+        var hh=''; if(filtered[k].titre) hh+='<strong>'+esc(filtered[k].titre)+'</strong><br>'; hh+=esc(filtered[k].texte);
+        items.push({cls:c,html:hh,time:filtered[k].time});
+      }
+      renderCarousel('panel-comm-sncf', items);
+    }).catch(function(){traficSNCFState='fluide';applyTraficState();});
+  }
+
+  // ── MAJ DOM ──
+  function majGareDOM(key, data) {
+    var pt    = document.getElementById('pt-'    + key);
+    var badge = document.getElementById('bdg-'   + key);
+    var heure = document.getElementById('heure-' + key);
+    var att   = document.getElementById('att-'   + key);
+    if (!pt||!badge||!heure||!att) return;
+    if (!data) {
+      pt.className='gare-point load'; badge.className='train-badge'; badge.textContent='';
+      heure.textContent='--:--'; heure.className='gare-heure muted';
+      att.textContent='—'; att.className='gare-attente muted'; return;
+    }
+    // La clé pour les seuils = trait+gare (ex: "1c-ml", "1-poissy")
+    var seuilKey = key.replace(/^(bdg|pt|heure|att)-/, '');
+    var etat = couleur(data.attente, seuilKey);
+    pt.className = 'gare-point ' + etat;
+    var bTxt = data.mission||'?'; if(data.retard>0) bTxt+=' +'+data.retard+'min';
+    badge.textContent = bTxt;
+    badge.className = 'train-badge visible '+(data.retard>3?'en-retard':'a-lheure');
+    heure.textContent = data.heureEstimee; heure.className = 'gare-heure ' + etat;
+    att.textContent = data.attente<=0?'À quai':data.attente+' min';
+    att.className = 'gare-attente ' + etat;
+  }
+
+  // ── FETCH UNE GARE ──
+  function fetchGare(stopId, filtres) {
+    return fetch(PROXY+'/stop-monitoring?MonitoringRef='+encodeURIComponent(stopId), {cache:'no-store'})
+      .then(function(r){return r.json();})
+      .then(function(data) {
+        var visits=[]; try{visits=data.Siri.ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit||[];}catch(e){}
+        var candidats=[];
+        for (var i=0;i<visits.length;i++) {
+          var v=visits[i], j=v.MonitoredVehicleJourney||{}, call=j.MonitoredCall||{};
+          var lineRef=''; try{lineRef=j.LineRef.value;}catch(e){} if(lineRef!==LINE) continue;
+          var dest=''; try{dest=j.DestinationName[0].value;}catch(e){} if(!destinationMatch(dest,filtres)) continue;
+          var dept=call.ExpectedDepartureTime||call.AimedDepartureTime, aimed=call.AimedDepartureTime;
+          if(!dept) continue;
+          var attMin=minutesDepuis(dept); if(attMin!==null&&attMin<-1) continue;
+          var retard=0; if(dept&&aimed) retard=Math.max(0,Math.round((new Date(dept)-new Date(aimed))/60000));
+          var mission=''; try{mission=j.VehicleJourneyName[0].value;}catch(e){} if(!mission) try{mission=j.JourneyNote[0].value;}catch(e){}
+          candidats.push({mission:mission, heureEstimee:formatHeure(dept), attente:attMin, retard:retard});
+        }
+        candidats.sort(function(a,b){return a.attente-b.attente;});
+        return candidats.length>0?candidats[0]:null;
+      });
+  }
+
+  // ── FETCH TOUT ──
+  function fetchAll() {
+    document.getElementById('refresh-info').textContent = 'Actualisation…';
+    fetchSNCF();
+
+    var taches = [
+      // CERGY trait 1 → Paris
+      {key:'1-cergyh',    stop:STOPS.cergyh,    filtres:FILTRE_PARIS},
+      {key:'1-cergysc',   stop:STOPS.cergysc,   filtres:FILTRE_PARIS},
+      {key:'1-cergypref', stop:STOPS.cergypref, filtres:FILTRE_PARIS},
+      {key:'1-neuville',  stop:STOPS.neuville,  filtres:FILTRE_PARIS},
+      {key:'1-conflans',  stop:STOPS.conflans,  filtres:FILTRE_PARIS},
+      {key:'1-acheresv',  stop:STOPS.acheresv,  filtres:FILTRE_PARIS},
+      {key:'1c-ml',       stop:STOPS.ml,        filtres:FILTRE_PARIS},
+      {key:'1c-sartr',    stop:STOPS.sartr,     filtres:FILTRE_PARIS},
+      {key:'1c-houilles', stop:STOPS.houilles,  filtres:FILTRE_PARIS},
+      // CERGY trait 2 ← Cergy
+      {key:'2-cergysc',   stop:STOPS.cergysc,   filtres:FILTRE_CERGY},
+      {key:'2-cergypref', stop:STOPS.cergypref, filtres:FILTRE_CERGY},
+      {key:'2-neuville',  stop:STOPS.neuville,  filtres:FILTRE_CERGY},
+      {key:'2-conflans',  stop:STOPS.conflans,  filtres:FILTRE_CERGY},
+      {key:'2-acheresv',  stop:STOPS.acheresv,  filtres:FILTRE_CERGY},
+      {key:'2c-ml',       stop:STOPS.ml,        filtres:FILTRE_CERGY},
+      {key:'2c-sartr',    stop:STOPS.sartr,     filtres:FILTRE_CERGY},
+      {key:'2c-houilles', stop:STOPS.houilles,  filtres:FILTRE_CERGY},
+      // POISSY trait 1 → Paris
+      {key:'1-poissy',    stop:STOPS.poissy,    filtres:FILTRE_PARIS},
+      {key:'1-agc',       stop:STOPS.agc,       filtres:FILTRE_PARIS},
+      {key:'1p-ml',       stop:STOPS.ml,        filtres:FILTRE_PARIS},
+      {key:'1p-sartr',    stop:STOPS.sartr,     filtres:FILTRE_PARIS},
+      {key:'1p-houilles', stop:STOPS.houilles,  filtres:FILTRE_PARIS},
+      // POISSY trait 2 ← Poissy
+      {key:'2-agc',       stop:STOPS.agc,       filtres:FILTRE_POISSY},
+      {key:'2p-ml',       stop:STOPS.ml,        filtres:FILTRE_POISSY},
+      {key:'2p-sartr',    stop:STOPS.sartr,     filtres:FILTRE_POISSY},
+      {key:'2p-houilles', stop:STOPS.houilles,  filtres:FILTRE_POISSY}
+    ];
+
+    Promise.all(taches.map(function(t) {
+      return fetchGare(t.stop, t.filtres)
+        .then(function(data) { majGareDOM(t.key, data); })
+        .catch(function()    { majGareDOM(t.key, null); });
+    })).then(function() {
+      var now=new Date(), h=now.getHours(), m=now.getMinutes(), s=now.getSeconds();
+      document.getElementById('refresh-info').textContent =
+        'Actualisé à '+(h<10?'0'+h:h)+':'+(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
+      demarrerBarre();
+    });
+
+    setTimeout(fetchAll, INTERVALLE);
+  }
+
+  fetchAll();
+</script>
+</body>
+</html>
