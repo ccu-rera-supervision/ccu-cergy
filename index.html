@@ -36,43 +36,32 @@
     header {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       gap: 1rem;
       flex-shrink: 0;
-      position: relative;
     }
-    .logo-badges { display: flex; align-items: center; gap: 0.5rem; }
-    .badge-rer {
-      background: #1a3a8f; color: white;
+    .header-left { display: flex; flex-direction: column; gap: 0.05rem; flex-shrink: 0; }
+    .projet-nom {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 900; font-size: 1rem;
-      padding: 0.2rem 0.5rem; border-radius: 4px;
+      font-weight: 900; font-size: 0.85rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
     }
-    .badge-a {
-      background: #e2001a; color: white;
+    .app-nom {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 900; font-size: 1.2rem;
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .header-title {
-      display: flex; align-items: center; gap: 0.6rem;
-    }
-    h1 {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800; font-size: 2vw;
-      letter-spacing: 0.04em; text-transform: uppercase; color: white;
+      font-weight: 700; font-size: 1.4rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: white;
     }
     .live-dot {
-      width: 11px; height: 11px;
+      width: 9px; height: 9px;
       background: var(--green); border-radius: 50%;
       flex-shrink: 0;
       animation: livepulse 2.5s ease-in-out infinite;
     }
     .header-clock {
-      position: absolute; right: 0;
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700; font-size: 2.2vw;
+      font-weight: 700; font-size: 1.8rem;
       color: white; letter-spacing: 0.05em;
     }
     @keyframes livepulse {
@@ -296,13 +285,11 @@
 
 <!-- HEADER -->
 <header>
-  <div class="logo-badges">
-    <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAAzAMMDASIAAhEBAxEB/8QAHAAAAgMBAQEBAAAAAAAAAAAAAAcFBggEAgMB/8QAURAAAQIFAQMFBw4MAwkAAAAAAQIDAAQFBhEHEiExCDJBUWETFBYicYGRFRgjOEJSVVaSlbHB0eIkNXJzdIKTobK00tMXdcIzNEVTYoWUpPD/xAAbAQACAgMBAAAAAAAAAAAAAAAABQMEAQYHAv/EADYRAAEDAgQBCQcDBQAAAAAAAAEAAgMEEQUSITFBBgciUWFxgZGhExUyM1Kx0SOS8CQ1VHLx/9oADAMBAAIRAxEAPwClWzQrI0K01o973zQGLnve4Gu+KPR5rBYkmMApddSQd+8HeCckJTjClRGq5X+q6DsSsvbUownc2y1TjsIHQBlcfnL+Uoa6tyoOGZajSrbKBwQnKzgDymM9QIWhfXgave/oHzd9+D14Gr3v6B83ffjPUECFoYcsHV4HO1b5/wC3ffixWjdVj8o5xdnXxblKtu+JhtRpNfpjXc0PugEht1OcnODuJIO/GycZyvFk0umHpTUq2JmXcU261V5RaFA4IIeTAhctStmq028Jm1Z9juFSlZtco+g8ELQohRz0jcTnqhk0Sg02lMJQxLoW7jxnlpBWo/V5BFj5QkuyzyvLqS2gJBS05j/qVKtEn0kxwQoxCV2YMGy7DzdYVTmldWvaC/MQCeAAG3ab7oggh1aQ6GeG9nN3DPVx6mpfeWlhtEsHNtCTs7eSRxUFDzRQjidIcrQt9xLFKXDIfbVTsrb22J18ElY8uIQ4kpcQlaTxCgCIt2rNmPWHekxQFzCpppLaHmH1I2C6hQ446MEKHmipx5c0tNjuFZp54qqFs0Zu1wuO4qjX1bEsiScqlOaDKm97zSeaU++A6MRQhvOIdVaSFUedSRkGXcz8kwlRzhDnD5XPYQ7guL84GF09FWskgblDwbgbXB38bq+t6clSQTVwCRv/AAf70fROmuf+M/8Arfei9Nc0eQR0txswpYupVYMIpHbs9T+UvF6ZPY9irDR/KYI+gmOSY02rKRlmbkXewqUn6RDUTHsRFLTRgaBMW8naB4+EjxKS81YtzMc2QDw62nUq+vMQ87R6rJE9906aZA6VtED08I0CI9DqycQuk6Oyw7kbTSfLkI77H8LN0EaAqNBo1RB78pks6T7rY2VekYMVeq6Z0x8KVTpx+UX0Jc9kR9RH74rGpYPiSup5FVzBeEh/ofXT1Sngix12y69SUqcXK98sJ4uy52wB2jiPRFciZj2vF2m61eqo56R+Sdhae0WRBBBHpVlobl9AHlCEEZHqXKf64cOsWotyWlyhresC3LbotSok3KyQcphpSFqWlxSkr2VAZThIyOgY3jEJ/l8+2EP+Vyn+qNGXfq1PW9ypKVp7UphiXoFZpDTLb6GkpeYmndsIWHOOCpITg7gVA9ECFSbBtW17d5at80+36dIqlZW3XJtmUDKVtyz6gwpSUJ6N6juHAKIG6ELrBq1qNd9ppol2WxSqXIuTCHUus0ZUstS0g4AWo9pyBvhqcl+hXFafKnv2j1mZmZusSlGnSZp0lbkyS6ypDuTkkrBSrzwodWbq12uS10S+orVyKosvMJeBnKR3s0l3BSklQbTvwogAnpgQtD6y6jXLZOsln2Ra1uUao0mdpckpymKpaFqeK1qQoJUBkeKkY6BjJGIT+v8AblvWvyuZam20wxKyiqjT33JVgAIYdWpClJSBzRwVjo2t26NG3Zq5O2nyjbRsaoPS7Nu1mhsNrdDSQ6zMOlxCFhziBtJSMcBnMZEui3a5avKVFFuKbmZ6oM3CwpU5MKKlzSFPIUh0k8SpJB8uR0QIV55Rftv7p/MsfyjMRcSnKL9t/dP5lj+UZiLhHiHzvBdz5uv7Qf8Ad32avvTZOYqNRlpCUQVzEy6hlpI6VqIAHpMbOvOtyWldl2nS2HEoaE9KSKjwJZScvL9AJP5UITkq236t6nN1F5valqOyZpWeHdD4rY8uSVfqw5te9Lrk1Fq1OXIVanSkhIsKSluY29ouLPjK8UEcAkemJKVj2wuewanZL+VdbSVGLwUVU/LEwFzu8jQfbzUByyLb75oFKulhGXJJ0yswR/y3N6SewKGP14y9G8qpa05WtJ3LTrjzD887TRLOPNk7CnkpGy4MjPOSkxhCYZdl5hyXfQW3WllDiTxSoHBHpEeK+Ozw/rV7m/rxNRPpC65icQO1p1Hrf0XDWPxTOfo7n8JhKDnCHXWPxTOfo7n8JhKDnCLGGbOWvc5vz6fud9wn21zR5outnab3rdUsmbotBfdlFc2YdUlppW/3JURtebMUtnA2SU7Q3ZGcZ7I11XFjVbTmTZ06uhNIclQnu8glwtnATgMubPjIA6CMpPbG1yyFlreaTTVb6cNy2AO5N7DySIu3S287UpKqrWafLtSiVpbK25pCyVKOEgJByST1CPN16Z3na1GFYrNKSzJbaUKW2+lwoKuG0BvA6M9e6LDZFk3c3qrRLcutmoNS/fPfa0vvqcZeSyNvKTkpVvwN28Z6IdUnfVJujUa5NN6oyy7JlruEuSP9spKPZ0HtBOR+SeqIJpXDTdWZMUqKctyWeAMziPpuBpqdd1kZCVKUEpBKicADiTFquTT67LenqfIVGmbU5UAoy0vLOB5xezjPipyRxEW2ztOZmR1+l7XnEl6Vp73fxcUNzsujxm1HynZSe3MO3Wy52LFoKrhkpNh2uTmzISrric7CfGWT+SN5wOJxmF81imNTjj46mGGmaH5xfz214dZ0OiQlO0S1Gm2EvGjsSwUMhMxNoSrzgZxEdL6YXhMXVOWzLSUq9UZJhD8wlE0nYQlWNnxjgZOeHGIarXfdVXmFTFRuKqPrJz/vKkJHkSkgAeQQ/uTfS6mzp7WLlQVTFWqq1iWXMOE7YaSUo2lHJxt7XmELTG2R2VX66vr8NpjPK5hJsAACBcniSdgL9SWH+B+o/wAESv8A5zf2ws9WdHnKTNMsXDIsU6ozLZdbclXUrUUg4yoJ3Hf179x3w4qjpnqvJSMzUJyvpQ0w2t55fqw5uABUo/TChrNVfVLu1GpTcxM9wZKyt91S1BKQTjJJ/wDjFJ36R6IIP87Fdpz7zY4VEscsQ3s06adeY2+6zvXacuk1eZpzjqHVML2CtHAwRzzsw5Nzj009vcecU4o9pOYIetvYX3XF5zGZHGMWbc27uCf3L+yNf1kbs0mVIPy4S1zXZcly1xuuV2tTk/UmkNobmXXPZEpRzACOGOPl38Y0bflvOco3TSh31Zq2Zq9aDIIp1fpBWEvPJRkpdbBO/JKiOsKIB2k4Oe5iwr4l3lsv2dcLTiDhSV0x4EH5MZUS7WdT7/ZvR+8m7rqaK++z3B2eDg7otvAGwd2NnxU7sdGY6rt1f1KuygvUK4rwqVRpr6kqdl3SnZWUnaTnABOCAfMIhPAm8vilXvm17+mDwJvL4pV75te/pgQvjdF1XFc9UYqlfrE3UJ2XZbYZfeXlaG0c1II4Y3nynMTlHuav3fq3b9YuSqzNUqDlSk2y++rKilLqAkREiyLzJwLSr5P+Wvf0w6+T5o7P0Cpsaqapy67ZtS31idSmfQW35x5G9tCWz42NrB3jKjgAHJIEI5Rftv7p/NMfyjMRcUG8b+fuXV6q3zMNKbTUJ1bha6UMkbKUdpSgJHlEXqXeamGEPsOJcaWMpWk5BEJsRYRIHcF2rm4q4n4e+nB6TXEkdhAsfRaR5Nl4WBZVkTK6xcMtL1WfmFOvNFtZUlCBsoTuTj3x4+6hVVnVa/J2rzk4xdVXlWX31uNsNzJSlpJUSEgdAAwIo+e2PyKrqh5YGDQDqWz0/J2jjq5quQZ3SfUAQLcBp/LBaK5PmsjUo1VZLUC5X1AqQ7JzE2pbh6QtGQCfen0wqtbHrfm9SKnUrYqDU7Tp5QmQttJAS4oeyJwQPdAn9aKXntgzA+dz4wx3DzWaTk/TUde+tgJaXixaLZeHC3Z18SuSsfimc/R3P4TCUHOENS+6uzT6M7LBYMzMoKEIzvCTxUfNCrHEQyw5hDCTxXNOcirilrYoWG5YDfsudu/S/itW6U6f1C/5qelKdUJKTdlGEuJEyo+yqJwEgDfwBJODjd1xbZLRfVijVdqYpkohp9tXiTcpUUI2fOSFY7MQi5e56G2pDiKxLoWnBSoLIUnz4yIsbOrE+hgS6dQailkcEeqL2B++Noc430cLJc2VxPQlbbqP/VrHVCuv21pDJt3TUZR270oaXKqYxtd9JUCHUjqA5xwAd44KxGY6fW6hJXI1cLDx9UGpvvsL98va2jnsOSPIYq794USZeU/M19l95XOcddUtR8pO+PIum3fhmU+UfsiLKxjbXumeGRUlJG5rpGkuvfUAa8AL7LeM/V6Gzaz2pbTae6mi7SHc7y2fZEt/LOIoSXqRrjprKU1VUZkrmkdlxaF8Q6ElKlbPFTahvyOG7qxGV/DynGREibq/BAMd7maX3PGc42eGM9kc7V22+04l1uuyzbiTlKkuKCknsIGRC2QWVelwiliGZtSA8G7TcaAcLE6jrTpe0I1EbfLbcpTXU9DqZ0BPlwRn90XjXuaYtHSugWLITCUvqDaXg2vfsNJBUSBvG0sg+mM5r1Q7oyGXL7m1Njgk1B3H0xGru23VrK11yVWtXFSnCSfKcQulJDSGtOqeRsFRPFJV1MZEZuALC54E3cdu5Tqn31JKVPukHiCsn64pmrNR7ytVUshWHJxwNbvejxlfQB54lfCu2/hqT+Ufsha6qVuWq9ZYbkphD8tLNYC0cCpRyr6h5op0sDnSjMNArfKXGKeHDJBDI0ud0RYg777dl1ToIIIeri6k7Zr9btqrN1e36rOUufa5kxKultYB4jI4g9IO4w2afyk9bUSqU+HL6sdK5CVUfSW8wQQIX39crrb8d3Pm6U/tQeuV1t+O7nzdKf2oIIEI9crrb8d3Pm6U/tQtb+1BvW+plL123JP1YtKJabeXhts9aW04Sk9oEEECFVo7qbVqlTc95TjrIVxSDlJ8x3QQRgtDhYqWGeWB4fE4tcOINj5hSnhZcHwgf2SPsg8LLg+ED+yR9kEERewi+keSc+/MT/yH/vd+UeFlwfCB/ZI+yPD913ApGPVJYz71CQfSBBBB7CP6R5Ly/HMTLT/UP/e78qEmHnX3VOvuLccVvUpZyT54+cEETbJI5xcbk6oggggWER+5PXBBAhGT1wZPXBBAhGT1wZMEECF+QQQQIRBBBAhf/9k=" alt="RER A SNCF" style="height:2.5vw; width:auto;">
+  <div class="header-left">
+    <div class="projet-nom">Supervision RER A Ouest</div>
+    <div class="app-nom">OPERA</div>
   </div>
-  <div class="header-title">
-    <h1>OPERA — Supervision RER A Ouest</h1>
-    <div class="live-dot"></div>
-  </div>
+  <div class="live-dot"></div>
   <div class="header-clock" id="clock">00:00:00</div>
 </header>
 
