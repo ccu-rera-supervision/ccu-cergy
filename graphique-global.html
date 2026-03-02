@@ -134,6 +134,10 @@
       background: var(--border); z-index: 0;
     }
     .rail-sep { height: 4px; }
+    /* Label Sens Paris/Poissy décalé pour coller au début du trait */
+    .rail-poissy .rail-fleche.gauche {
+      left: calc(65px + (100% - 130px) * 4 / 9 - 55px);
+    }
     /* Rail branche Poissy : trait commence après les 4 colonnes fantômes (4/9 ≈ 44.4%) */
     .rail-poissy::before {
       left: calc(65px + (100% - 130px) * 4 / 9) !important;
